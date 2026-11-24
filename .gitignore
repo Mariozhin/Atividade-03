@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+server.out.log
+server.err.log
+.vscode/
+.idea/
+artifacts/candidato_*.joblib
