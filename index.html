@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PREVIA AI — Previsão de Churn</title>
+<meta name="description" content="Sistema de previsão de cancelamento de clientes com modelo de Machine Learning treinado e avaliado em dados reais.">
+<link rel="stylesheet" href="site/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230b5d5a'/><path d='M9 23V9h7a5 5 0 0 1 0 10h-3v4' stroke='%235eead4' stroke-width='2.6' fill='none' stroke-linejoin='round'/></svg>">
+</head>
+<body>
+<div class="shell">
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <rect width="40" height="40" rx="11" fill="#0f766e"/>
+        <rect x="0.5" y="0.5" width="39" height="39" rx="10.5" stroke="#5eead4" stroke-opacity=".35"/>
+        <path d="M12 29V11h8.2a6.2 6.2 0 0 1 0 12.4H17V29" stroke="#5eead4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="27.5" cy="27.5" r="2.5" fill="#fbbf24"/>
+      </svg>
+      <div>
+        <div class="brand-name">PREVIA<span> AI</span></div>
+        <div class="brand-sub">Customer Retention</div>
+      </div>
+    </div>
+
+    <nav class="nav" aria-label="Navegação principal">
+      <div class="nav-label">Painel</div>
+      <a class="nav-item" data-view="overview" href="#overview">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        Visão geral
+      </a>
+      <a class="nav-item" data-view="dados" href="#dados">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5.5" rx="7.5" ry="3"/><path d="M4.5 5.5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/><path d="M4.5 11.5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/></svg>
+        Base de dados
+      </a>
+      <a class="nav-item" data-view="eda" href="#eda">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+        Análise exploratória
+      </a>
+
+      <div class="nav-label">Inteligência</div>
+      <a class="nav-item" data-view="modelo" href="#modelo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M10 2v3M14 2v3M10 19v3M14 19v3M2 10h3M2 14h3M19 10h3M19 14h3"/></svg>
+        Modelo de Machine Learning
+      </a>
+      <a class="nav-item" data-view="simulador" href="#simulador">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 17V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M8 12h2M14 12h2M12 9v6"/></svg>
+        Simulador de risco
+      </a>
+      <a class="nav-item" data-view="clientes" href="#clientes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.2 2.5-5.2 5.5-5.2s5.5 2 5.5 5.2"/><path d="M16.5 11.2A3 3 0 0 0 16.5 5.4M17.5 14.9c1.9.5 3 2.2 3 4.4"/></svg>
+        Clientes em risco
+      </a>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="status"><span class="dot" id="status-dot"></span><span id="status-text">Conectando à API…</span></div>
+      <div class="tiny">Modelo carregado do artefato<br><span class="mono" style="font-size:10.5px">modelo_previa.joblib</span></div>
+      <a class="tiny" href="relatorio/PREVIA_AI_Relatorio.pdf" target="_blank" style="display:block;margin-top:10px;color:#0f766e;font-weight:650;text-decoration:none">📄 Relatório completo (PDF)</a>
+    </div>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <div class="main">
+    <header class="topbar">
+      <button class="menu-btn" id="menu-btn" aria-label="Menu">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <div class="crumb"><span>PREVIA AI</span><span>/</span><b id="crumb-atual">Visão geral</b></div>
+      <div class="topbar-right">
+        <span class="chip neutral" id="chip-dataset">Base: —</span>
+        <span class="chip" id="chip-modelo">Modelo: —</span>
+      </div>
+    </header>
+
+    <!-- ---------------- VISÃO GERAL ---------------- -->
+    <section class="view active" id="view-overview">
+      <div class="hero">
+        <div>
+          <div class="eyebrow" style="color:#5eead4">Sistema de retenção inteligente</div>
+          <h1>Antecipe o cancelamento<br>antes que ele <em>aconteça</em>.</h1>
+          <p>A PREVIA AI estima, para cada cliente, a probabilidade de churn a partir do comportamento de uso,
+          do contrato e do histórico de cobrança. O modelo foi treinado e medido em uma base pública real,
+          com separação rígida entre treino e teste.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#simulador">Simular um cliente</a>
+            <a class="btn btn-ghost" href="#modelo">Ver metodologia e métricas</a>
+          </div>
+        </div>
+        <div class="hero-panel" id="hero-panel">
+          <div class="row"><span class="k">Modelo em produção</span><span class="v" id="hp-modelo">—</span></div>
+          <div class="row"><span class="k">ROC-AUC (teste)</span><span class="v" id="hp-auc">—</span></div>
+          <div class="row"><span class="k">Recall da classe “cancelou”</span><span class="v" id="hp-recall">—</span></div>
+          <div class="row"><span class="k">Limiar de decisão</span><span class="v" id="hp-limiar">—</span></div>
+          <div class="row"><span class="k">Clientes no conjunto de teste</span><span class="v" id="hp-teste">—</span></div>
+        </div>
+      </div>
+
+      <div class="grid g4" style="margin-top:18px" id="kpis-overview"></div>
+
+      <h2 class="section-title"><span class="n">01</span> Como a decisão é construída <span class="hint">do dado bruto ao alerta de retenção</span></h2>
+      <div class="pipeline" id="pipeline-home"></div>
+
+      <div class="grid g3" style="margin-top:18px">
+        <div class="card card-pad">
+          <div class="eyebrow" style="margin-bottom:6px">Entrada</div>
+          <h3 style="font-size:15px">21 atributos por cliente</h3>
+          <p class="small muted" style="margin-top:6px">Tempo de casa, tipo de contrato, serviços contratados, forma de pagamento, cobrança mensal e total já pago.</p>
+        </div>
+        <div class="card card-pad">
+          <div class="eyebrow" style="margin-bottom:6px">Processamento</div>
+          <h3 style="font-size:15px">Gradient Boosting</h3>
+          <p class="small muted" style="margin-top:6px">Conjunto de árvores de decisão que se corrigem em sequência, com hiperparâmetros escolhidos por validação cruzada.</p>
+        </div>
+        <div class="card card-pad">
+          <div class="eyebrow" style="margin-bottom:6px">Saída</div>
+          <h3 style="font-size:15px">Probabilidade + ação</h3>
+          <p class="small muted" style="margin-top:6px">Cada cliente recebe uma probabilidade de 0 a 100%, uma faixa de risco e a ação de retenção recomendada.</p>
+        </div>
+      </div>
+
+      <div class="grid g2" style="margin-top:18px">
+        <div class="card">
+          <div class="card-head"><h3>Origem dos dados</h3><span class="sub">transparência</span></div>
+          <div class="card-body" id="origem-dados"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Resultado no conjunto de teste</h3><span class="sub" id="sub-resultado"></span></div>
+          <div class="card-body" id="resumo-teste"></div>
+        </div>
+      </div>
+
+      <footer class="foot">
+        <span>PREVIA AI · Trabalho acadêmico de Machine Learning aplicado à retenção de clientes · <a href="relatorio/PREVIA_AI_Relatorio.pdf" target="_blank" style="color:#0f766e;font-weight:600">Relatório em PDF</a></span>
+        <span id="foot-meta"></span>
+      </footer>
+    </section>
+
+    <!-- ---------------- DADOS ---------------- -->
+    <section class="view" id="view-dados">
+      <div class="page-head">
+        <div class="eyebrow">Base de dados</div>
+        <h1 class="title">O que o modelo enxerga</h1>
+        <p class="lead">Antes de escolher qualquer algoritmo, é preciso entender a base: quantos registros existem,
+        qual é o tipo de cada variável, como as classes se distribuem e quais problemas de qualidade precisam ser tratados.</p>
+      </div>
+
+      <div class="grid g4" id="kpis-dados"></div>
+
+      <div class="grid g23" style="margin-top:18px">
+        <div class="card">
+          <div class="card-head"><h3>Dicionário de variáveis</h3><span class="sub">21 colunas originais · 21 atributos no modelo</span></div>
+          <div class="card-body" style="padding:0">
+            <div class="table-wrap" style="max-height:520px; overflow-y:auto">
+              <table class="data" id="tabela-schema">
+                <thead><tr><th>Coluna</th><th style="text-align:left">Tipo</th><th style="text-align:left">Papel</th><th style="text-align:left">Valores observados</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:16px">
+          <div class="card">
+            <div class="card-head"><h3>Distribuição do alvo</h3></div>
+            <div class="card-body">
+              <div id="donut-classe"></div>
+              <div class="callout warn" style="margin-top:14px" id="callout-desbalance"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Qualidade e integridade</h3></div>
+            <div class="card-body"><ul class="list-check" id="lista-qualidade"></ul></div>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-title"><span class="n">02</span> Por que a acurácia não basta</h2>
+      <div class="card card-pad" id="bloco-acuracia"></div>
+    </section>
+
+    <!-- ---------------- EDA ---------------- -->
+    <section class="view" id="view-eda">
+      <div class="page-head">
+        <div class="eyebrow">Análise exploratória</div>
+        <h1 class="title">Onde o cancelamento se concentra</h1>
+        <p class="lead">Os gráficos abaixo são calculados sobre os 7.043 registros da base. Eles explicam por que
+        variáveis como tipo de contrato e tempo de casa carregam tanto sinal preditivo.</p>
+      </div>
+
+      <div class="grid g2">
+        <div class="card"><div class="card-head"><h3>Taxa de churn por tipo de contrato</h3><span class="sub">% de clientes que cancelaram</span></div><div class="card-body" id="chart-contrato"></div></div>
+        <div class="card"><div class="card-head"><h3>Taxa de churn por tempo de casa</h3><span class="sub">meses como cliente</span></div><div class="card-body" id="chart-tenure"></div></div>
+        <div class="card"><div class="card-head"><h3>Taxa de churn por serviço de internet</h3></div><div class="card-body" id="chart-internet"></div></div>
+        <div class="card"><div class="card-head"><h3>Taxa de churn por forma de pagamento</h3></div><div class="card-body" id="chart-pagamento"></div></div>
+      </div>
+
+      <div class="grid g23" style="margin-top:16px">
+        <div class="card">
+          <div class="card-head"><h3>Cobrança mensal: cancelou × ficou</h3><span class="sub">densidade de clientes por faixa</span></div>
+          <div class="card-body" id="chart-hist"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Correlação com o churn</h3><span class="sub">variáveis numéricas</span></div>
+          <div class="card-body" id="chart-corr"></div>
+        </div>
+      </div>
+
+      <h2 class="section-title"><span class="n">03</span> Leituras que orientam o modelo</h2>
+      <div class="grid g3" id="insights-eda"></div>
+    </section>
+
+    <!-- ---------------- MODELO ---------------- -->
+    <section class="view" id="view-modelo">
+      <div class="page-head">
+        <div class="eyebrow">Modelo de Machine Learning</div>
+        <h1 class="title">Cinco algoritmos comparados, um escolhido</h1>
+        <p class="lead">O problema é de <b>classificação binária supervisionada</b>: prever se um cliente vai cancelar
+        (<span class="mono">Churn = Yes</span>) a partir de 21 atributos (19 originais + 2 derivados). Nenhum algoritmo foi escolhido de antemão —
+        todos foram treinados nos mesmos dados, com o mesmo protocolo, e avaliados no mesmo conjunto de teste.</p>
+      </div>
+
+      <div class="grid g4" id="kpis-modelo"></div>
+
+      <h2 class="section-title"><span class="n">01</span> Protocolo experimental <span class="hint">sem vazamento de dados</span></h2>
+      <div class="card card-body" id="protocolo"></div>
+
+      <h2 class="section-title"><span class="n">02</span> Algoritmos testados <span class="hint">clique para ver como cada um funciona</span></h2>
+      <div style="display:flex; flex-direction:column; gap:10px" id="accordion-algoritmos"></div>
+
+      <h2 class="section-title"><span class="n">03</span> Comparação dos resultados <span class="hint">mesmo treino, mesmo teste</span></h2>
+      <div class="card">
+        <div class="card-head">
+          <h3>Tabela comparativa — conjunto de teste (n = <span id="n-teste-tabela">—</span>)</h3>
+          <span class="sub">ordenado por PR-AUC</span>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div class="table-wrap"><table class="data" id="tabela-comparativa"></table></div>
+        </div>
+        <div class="card-body" style="border-top:1px solid var(--line-soft); padding-top:14px">
+          <p class="tiny muted" id="nota-tabela"></p>
+        </div>
+      </div>
+
+      <div class="grid g2" style="margin-top:16px">
+        <div class="card">
+          <div class="card-head"><h3>Curvas ROC</h3><span class="sub">quanto mais perto do canto superior esquerdo, melhor</span></div>
+          <div class="card-body" id="chart-roc"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Curvas Precisão × Recall</h3><span class="sub">foco na classe “cancelou”</span></div>
+          <div class="card-body" id="chart-pr"></div>
+        </div>
+      </div>
+
+      <h2 class="section-title"><span class="n">04</span> Modelo selecionado <span class="hint" id="sel-hint"></span></h2>
+      <div class="card" style="border-color:#b8e9e1; box-shadow:0 1px 3px rgba(15,118,110,.10), 0 18px 40px -28px rgba(15,118,110,.55)">
+        <div class="card-head" style="background:linear-gradient(90deg,#f0fdfa,#fff)">
+          <span class="tag sel">Selecionado</span>
+          <h3 id="sel-nome">—</h3>
+          <span class="sub" id="sel-familia"></span>
+        </div>
+        <div class="card-body">
+          <p id="sel-justificativa" style="font-size:13.5px; line-height:1.7"></p>
+          <div class="grid g4" style="margin-top:16px" id="sel-kpis"></div>
+          <div class="grid g2" style="margin-top:18px">
+            <div>
+              <div class="small" style="font-weight:650; margin-bottom:8px">Matriz de confusão no teste</div>
+              <div id="sel-matriz"></div>
+            </div>
+            <div>
+              <div class="small" style="font-weight:650; margin-bottom:8px">Hiperparâmetros e calibração</div>
+              <div id="sel-params"></div>
+              <div id="sel-calib"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-title"><span class="n">05</span> Limiar de decisão <span class="hint">o ponto de operação é uma escolha de negócio</span></h2>
+      <div class="card">
+        <div class="card-body">
+          <div class="grid g23">
+            <div>
+              <p class="small" style="margin-bottom:10px">O modelo devolve uma probabilidade; o limiar transforma essa probabilidade em decisão
+              (“acionar retenção” ou “não acionar”). Arraste o controle e veja o efeito <b>medido no conjunto de teste</b>,
+              recalculado ao vivo a partir das probabilidades reais do modelo.</p>
+              <div class="slider-wrap" style="margin-top:14px">
+                <input type="range" id="slider-limiar" min="5" max="90" step="1" value="34">
+                <div style="display:flex; justify-content:space-between; margin-top:6px" class="tiny muted">
+                  <span>0,05 (mais recall)</span><span>0,90 (mais precisão)</span>
+                </div>
+              </div>
+              <div class="grid g3" style="margin-top:16px" id="limiar-kpis"></div>
+              <div class="callout info" style="margin-top:14px" id="limiar-texto"></div>
+            </div>
+            <div>
+              <div class="small" style="font-weight:650; margin-bottom:8px">Trade-off ao longo dos limiares</div>
+              <div id="chart-limiar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-title"><span class="n">06</span> O que pesa na decisão <span class="hint">importância por permutação no teste</span></h2>
+      <div class="grid g23">
+        <div class="card"><div class="card-head"><h3>Queda de ROC-AUC ao embaralhar cada atributo</h3></div><div class="card-body" id="chart-importancia"></div></div>
+        <div class="card card-pad" id="importancia-texto"></div>
+      </div>
+
+      <h2 class="section-title"><span class="n">07</span> Como o Gradient Boosting funciona</h2>
+      <div class="grid g2">
+        <div class="card card-body" id="como-funciona"></div>
+        <div class="card card-body" id="limitacoes"></div>
+      </div>
+
+      <h2 class="section-title"><span class="n">08</span> Ficha técnica do modelo</h2>
+      <div class="card card-body" id="ficha-tecnica"></div>
+    </section>
+
+    <!-- ---------------- SIMULADOR ---------------- -->
+    <section class="view" id="view-simulador">
+      <div class="page-head">
+        <div class="eyebrow">Simulador</div>
+        <h1 class="title">Previsão para um novo cliente</h1>
+        <p class="lead">Preencha o perfil do cliente. O formulário envia os dados para a API, que carrega o modelo
+        treinado e devolve a probabilidade real de churn — não é uma estimativa ilustrativa.</p>
+      </div>
+
+      <div class="grid g32" style="align-items:start">
+        <div class="card">
+          <div class="card-head"><h3>Perfil do cliente</h3><span class="sub">19 campos do formulário</span></div>
+          <div class="card-body">
+            <div class="preset-row" style="margin-bottom:16px">
+              <button class="preset" data-preset="novo">Cliente novo · fibra</button>
+              <button class="preset" data-preset="fiel">Cliente fiel · 2 anos</button>
+              <button class="preset" data-preset="medio">Perfil intermediário</button>
+              <button class="preset" data-preset="risco">Alto risco</button>
+            </div>
+            <form id="form-cliente" class="form-grid" autocomplete="off"></form>
+            <div style="display:flex; gap:10px; margin-top:18px; align-items:center">
+              <button class="btn btn-solid" id="btn-prever" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                Calcular risco
+              </button>
+              <span class="tiny muted" id="form-status"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="card-resultado" style="position:sticky; top:84px">
+          <div class="card-head"><h3>Resultado do modelo</h3><span class="sub" id="res-sub">aguardando envio</span></div>
+          <div class="card-body" id="resultado">
+            <div class="result-hero">
+              <div class="cap">Probabilidade de cancelamento</div>
+              <div class="pct" style="color:var(--ink-400)">—</div>
+              <p class="small muted" style="margin-top:10px">Preencha o perfil e clique em “Calcular risco”.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-title"><span class="n">09</span> Lote de novos clientes <span class="hint">previstos pela API</span></h2>
+      <div class="card">
+        <div class="card-head"><h3>12 perfis de novos clientes</h3><span class="sub" id="lote-sub">dados de entrada, não resultados</span></div>
+        <div class="card-body" style="padding:0"><div class="table-wrap"><table class="data" id="tabela-novos"></table></div></div>
+      </div>
+    </section>
+
+    <!-- ---------------- CLIENTES ---------------- -->
+    <section class="view" id="view-clientes">
+      <div class="page-head">
+        <div class="eyebrow">Operação</div>
+        <h1 class="title">Clientes em risco</h1>
+        <p class="lead">Clientes do conjunto de teste, ordenados pela probabilidade de churn calculada pelo modelo.
+        A coluna “desfecho real” existe apenas para auditoria — o modelo nunca viu esses rótulos durante o treino.</p>
+      </div>
+
+      <div class="grid g4" id="kpis-clientes"></div>
+
+      <div class="card" style="margin-top:16px">
+        <div class="card-head">
+          <h3>Fila de retenção</h3>
+          <div class="toolbar" style="margin-left:auto">
+            <div class="search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              <input type="search" id="busca-clientes" placeholder="Buscar por ID…">
+            </div>
+            <select id="filtro-faixa" style="padding:8px 10px; border:1px solid var(--line); border-radius:9px; font-size:13px; font-family:inherit; background:#fff">
+              <option value="todos">Todas as faixas</option>
+              <option value="critico">Crítico</option>
+              <option value="alto">Alto</option>
+              <option value="moderado">Moderado</option>
+              <option value="baixo">Baixo</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body" style="padding:0"><div class="table-wrap"><table class="data" id="tabela-clientes"></table></div></div>
+        <div class="card-body" style="border-top:1px solid var(--line-soft)">
+          <div class="pager" id="pager-clientes"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script src="site/dados.js"></script>
+<script src="site/prever.js"></script>
+<script src="site/app.js"></script>
+</body>
+</html>

@@ -14,6 +14,22 @@ painel web interativo.
 
 ---
 
+## Acesso rápido
+
+| Recurso | Link |
+|---|---|
+| **Painel interativo** (GitHub Pages) | <https://mariozhin.github.io/Atividade-03/> |
+| **Relatório técnico em PDF** (26 páginas) | <https://mariozhin.github.io/Atividade-03/relatorio/PREVIA_AI_Relatorio.pdf> |
+| **Código-fonte** | <https://github.com/Mariozhin/Atividade-03> |
+
+A versão publicada é **estática**: não depende de servidor local, Python ou API. O navegador
+executa o mesmo modelo Gradient Boosting exportado do treino — as probabilidades do simulador
+são calculadas no próprio navegador e foram validadas contra o Python com diferença máxima de
+4,9 × 10⁻⁷ em 120 perfis aleatórios. O PDF documenta a metodologia, os resultados e as
+limitações por trás do painel.
+
+---
+
 ## 1. Resultado em uma linha
 
 | Item | Valor |
@@ -72,6 +88,8 @@ curvas de calibração, estão em `reports/modelo_card.md`.
 
 ```
 .
+├── index.html                     # versão estática publicada no GitHub Pages
+├── site/                          # dados, modelo e JS da versão estática
 ├── data/
 │   ├── Telco-Customer-Churn.csv   # base real (IBM)
 │   └── novos_clientes.csv         # 12 perfis fictícios para o simulador
@@ -79,11 +97,19 @@ curvas de calibração, estão em `reports/modelo_card.md`.
 │   ├── features.py                # limpeza + engenharia de atributos (fonte única)
 │   ├── train.py                   # treino, comparação, seleção e artefatos
 │   ├── gerar_relatorio.py         # gera o model card e a tabela CSV
-│   └── api.py                     # FastAPI: serve o painel e as previsões
+│   ├── api.py                     # FastAPI: serve o painel e as previsões
+│   ├── exportar_site_estatico.py  # gera a versão estática publicada
+│   ├── gerar_relatorio_pdf.py     # gera o relatório técnico em PDF
+│   └── relatorio_pdf/             # conteúdo, figuras e estilo do relatório
 ├── web/
 │   ├── index.html                 # SPA com 6 seções
 │   ├── styles.css
+│   ├── prever.js                  # inferência no navegador (versão estática)
 │   └── app.js                     # gráficos SVG, simulador, explicações SHAP
+├── relatorio/
+│   ├── PREVIA_AI_Relatorio.pdf    # relatório técnico final (26 páginas)
+│   ├── relatorio.html             # fonte HTML do relatório
+│   └── figuras/                   # gráficos usados no PDF
 ├── artifacts/
 │   ├── modelo_previa.joblib       # modelo selecionado + pipeline completo
 │   ├── candidato_*.joblib         # os 5 modelos treinados
@@ -115,6 +141,12 @@ python src/gerar_relatorio.py
 # 3) Subir a API + painel
 python src/api.py
 # abra http://127.0.0.1:8000
+
+# 4) Gerar a versão estática publicada no GitHub Pages
+python src/exportar_site_estatico.py
+
+# 5) Gerar o relatório técnico em PDF (requer Microsoft Edge)
+python src/gerar_relatorio_pdf.py
 ```
 
 > O treino é determinístico (semente 42). Se retreinar, **reinicie a API**, pois ela mantém
@@ -158,6 +190,23 @@ Seis seções: **Visão geral**, **Base de dados**, **Análise exploratória**, 
 Machine Learning** (algoritmos testados, comparação, métricas, matriz de confusão, curva de
 limiar, importância de atributos, explicação didática e ficha técnica), **Simulador de
 risco** (formulário + medidor + SHAP) e **Clientes em risco** (ranking da base).
+
+### Versão publicada (estática)
+
+O painel em <https://mariozhin.github.io/Atividade-03/> é uma exportação estática do mesmo
+dashboard. O script `src/exportar_site_estatico.py` lê `artifacts/resultados.json` e
+`artifacts/modelo_previa.joblib` e grava `index.html`, `site/dados.js`, `site/prever.js` e
+`site/app.js` na raiz do repositório. Não há backend: o modelo Gradient Boosting é executado
+em JavaScript no navegador, e os dados já calculados são embutidos no `dados.js`.
+
+```bash
+python src/exportar_site_estatico.py
+# publique a pasta na branch main; o GitHub Pages serve index.html na raiz
+```
+
+O relatório em PDF fica em `relatorio/PREVIA_AI_Relatorio.pdf` e é gerado por
+`src/gerar_relatorio_pdf.py`, que monta o HTML, imprime com o Microsoft Edge em modo headless
+e numera as páginas com PyMuPDF.
 
 ---
 

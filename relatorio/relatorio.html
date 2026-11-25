@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>PREVIA AI — Relatório técnico de previsão de churn</title>
+<meta name="author" content="Mario Joaquim Ferreira">
+<meta name="description" content="Relatório técnico do projeto PREVIA AI: previsão de churn com a base IBM Telco Customer Churn.">
+<style>
+* { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+@page { size: A4; margin: 16mm 15mm 15mm 15mm; }
+@page :first { margin: 0; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: "Segoe UI", "DejaVu Sans", Arial, sans-serif;
+  font-size: 10.2pt; line-height: 1.55; color: #1f2937; background: #fff;
+}
+p { margin: 0 0 8px; text-align: justify; }
+strong { color: #0b3b3a; }
+a { color: #0f766e; text-decoration: none; }
+small, .small { font-size: 8.6pt; }
+.muted { color: #667085; }
+.mono { font-family: "Cascadia Mono", Consolas, monospace; font-size: 8.8pt; background: #f6f8fb; padding: 1px 4px; border-radius: 3px; }
+
+/* ---------------- capa ---------------- */
+.capa { height: 297mm; padding: 24mm 22mm; background: linear-gradient(160deg, #0b3b3a 0%, #0f5f59 55%, #0f766e 100%); color: #fff; position: relative; page-break-after: always; overflow: hidden; }
+.capa:before { content: ""; position: absolute; width: 120mm; height: 120mm; border: 1.2mm solid rgba(94,234,212,.14); border-radius: 50%; right: -45mm; top: -35mm; }
+.capa:after { content: ""; position: absolute; width: 80mm; height: 80mm; border: .8mm solid rgba(94,234,212,.16); border-radius: 50%; right: -20mm; bottom: 40mm; }
+.capa .marca { display: flex; align-items: center; gap: 5mm; }
+.capa .logo { width: 17mm; height: 17mm; border-radius: 4mm; background: #0f766e; border: .4mm solid rgba(94,234,212,.5); display: grid; place-items: center; }
+.capa .logo svg { width: 11mm; height: 11mm; }
+.capa .marca-nome { font-size: 20pt; font-weight: 700; letter-spacing: .5px; }
+.capa .marca-nome span { color: #5eead4; }
+.capa .marca-sub { font-size: 8.5pt; letter-spacing: 2.4px; text-transform: uppercase; color: rgba(255,255,255,.72); }
+.capa .eyebrow { margin-top: 38mm; font-size: 9pt; letter-spacing: 3px; text-transform: uppercase; color: #5eead4; font-weight: 600; }
+.capa h1 { font-size: 34pt; line-height: 1.08; margin: 4mm 0 5mm; font-weight: 700; letter-spacing: -.5px; }
+.capa h1 em { color: #5eead4; font-style: normal; }
+.capa .subtitulo { font-size: 13pt; color: rgba(255,255,255,.86); max-width: 150mm; line-height: 1.5; }
+.capa .faixa { margin-top: 12mm; display: flex; gap: 4mm; flex-wrap: wrap; }
+.capa .faixa div { border: .35mm solid rgba(94,234,212,.35); border-radius: 3mm; padding: 2.2mm 3.6mm; font-size: 8.2pt; color: rgba(255,255,255,.9); background: rgba(255,255,255,.04); }
+.capa .rodape { position: absolute; left: 22mm; right: 22mm; bottom: 18mm; display: flex; justify-content: space-between; align-items: flex-end; font-size: 8.8pt; color: rgba(255,255,255,.75); border-top: .25mm solid rgba(255,255,255,.2); padding-top: 5mm; }
+.capa .rodape b { color: #fff; display: block; font-size: 10pt; }
+
+/* ---------------- estrutura ---------------- */
+.conteudo { padding: 0; }
+h2 { font-size: 15pt; color: #0b3b3a; margin: 0 0 4mm; padding: 0 0 2.4mm 4mm; border-left: 2.2mm solid #0f766e; border-bottom: .25mm solid #d9e2e0; page-break-after: avoid; line-height: 1.25; }
+h2 .num { color: #0f766e; font-size: 9pt; letter-spacing: 1.4px; display: block; margin-bottom: 1mm; text-transform: uppercase; }
+h3 { font-size: 11.2pt; color: #134e4a; margin: 6mm 0 2.2mm; page-break-after: avoid; }
+h4 { font-size: 10pt; color: #0b3b3a; margin: 4mm 0 1.6mm; page-break-after: avoid; }
+section { page-break-before: always; }
+section.primeira { page-break-before: avoid; }
+ul, ol { margin: 0 0 8px 5mm; padding: 0; }
+li { margin-bottom: 2.4px; text-align: justify; }
+hr { border: 0; border-top: .2mm solid #e4e7ec; margin: 6mm 0; }
+
+/* ---------------- sumario ---------------- */
+.sumario { page-break-after: always; }
+.sumario h2 { margin-bottom: 6mm; }
+.sumario ol { list-style: none; margin: 0; padding: 0; counter-reset: item; }
+.sumario li { counter-increment: item; display: flex; align-items: baseline; gap: 2mm; font-size: 10.2pt; padding: 1.7mm 0; border-bottom: .2mm dotted #d0d5dd; }
+.sumario li:before { content: counter(item, decimal-leading-zero); color: #0f766e; font-weight: 700; font-size: 8.6pt; width: 8mm; }
+.sumario li span.t { flex: 1; }
+.sumario li span.p { color: #667085; font-size: 9pt; }
+.sumario .nota { margin-top: 7mm; font-size: 8.8pt; color: #667085; background: #f8fafc; border: .2mm solid #e4e7ec; border-radius: 2mm; padding: 4mm; }
+
+/* ---------------- componentes ---------------- */
+.callout { border-left: 1.4mm solid #0f766e; background: #f0fdfa; border-radius: 0 2mm 2mm 0; padding: 3.4mm 4mm; margin: 3mm 0 4mm; page-break-inside: avoid; }
+.callout.amber { border-color: #d97706; background: #fffbeb; }
+.callout.red { border-color: #b3261e; background: #fef3f2; }
+.callout .tit { font-weight: 700; color: #0b3b3a; font-size: 9.4pt; margin-bottom: 1mm; display: block; }
+
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2.6mm; margin: 3mm 0 5mm; }
+.kpi { border: .25mm solid #d9e2e0; border-top: 1.1mm solid #0f766e; border-radius: 2mm; padding: 3mm; background: #fff; page-break-inside: avoid; }
+.kpi .v { font-size: 16pt; font-weight: 700; color: #0b3b3a; line-height: 1.1; }
+.kpi .k { font-size: 7.8pt; color: #667085; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 1mm; }
+.kpi .d { font-size: 7.6pt; color: #667085; margin-top: 1mm; }
+
+table { width: 100%; border-collapse: collapse; margin: 2.5mm 0 4mm; font-size: 8.4pt; page-break-inside: avoid; }
+thead th { background: #ecfdf5; color: #0b3b3a; font-weight: 700; text-align: left; padding: 2mm 2.2mm; border-bottom: .3mm solid #99f6e4; }
+tbody td { padding: 1.8mm 2.2mm; border-bottom: .2mm solid #eaecf0; vertical-align: top; }
+tbody tr:nth-child(even) td { background: #fafcfc; }
+table.num tbody td:not(:first-child), table.num thead th:not(:first-child) { text-align: right; }
+table.compacta { font-size: 7.8pt; }
+table.compacta td, table.compacta th { padding: 1.4mm 1.7mm; }
+.destaque { background: #f0fdfa !important; font-weight: 600; color: #0b3b3a; }
+
+figure { margin: 3mm 0 5mm; page-break-inside: avoid; }
+figure img { width: 100%; display: block; border: .2mm solid #eaecf0; border-radius: 1.5mm; }
+figcaption { font-size: 8pt; color: #667085; margin-top: 1.6mm; line-height: 1.4; }
+figcaption b { color: #344054; }
+.duas { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; align-items: start; }
+.tres { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+.lado { display: grid; grid-template-columns: 1.15fr .85fr; gap: 6mm; align-items: start; }
+
+.fluxo { display: flex; align-items: stretch; gap: 0; margin: 3mm 0 5mm; page-break-inside: avoid; }
+.fluxo .etapa { flex: 1; border: .25mm solid #d9e2e0; border-radius: 2mm; padding: 2.6mm; text-align: center; background: #fff; }
+.fluxo .etapa b { display: block; font-size: 8.4pt; color: #0b3b3a; }
+.fluxo .etapa span { font-size: 7.4pt; color: #667085; }
+.fluxo .seta { display: grid; place-items: center; width: 7mm; color: #0f766e; font-size: 12pt; }
+
+.codigo { background: #0b3b3a; color: #d1fae5; border-radius: 2mm; padding: 3.4mm 4mm; font-family: "Cascadia Mono", Consolas, monospace; font-size: 8pt; line-height: 1.55; margin: 2.5mm 0 4mm; white-space: pre-wrap; page-break-inside: avoid; }
+.codigo .c { color: #6ee7b7; }
+
+.rubrica { margin-top: 8mm; padding-top: 4mm; border-top: .2mm solid #e4e7ec; font-size: 8.4pt; color: #667085; }
+.fim { text-align: center; margin-top: 12mm; font-size: 8.6pt; color: #667085; }
+
+/* ---------------- contracapa ---------------- */
+.contracapa { page-break-before: always; background: linear-gradient(160deg, #0b3b3a 0%, #0f5f59 60%, #0f766e 100%); color: #fff; border-radius: 3mm; padding: 20mm 18mm; height: 250mm; position: relative; overflow: hidden; }
+.contracapa:before { content: ""; position: absolute; width: 110mm; height: 110mm; border: 1mm solid rgba(94,234,212,.14); border-radius: 50%; right: -35mm; top: -30mm; }
+.contracapa:after { content: ""; position: absolute; width: 70mm; height: 70mm; border: .7mm solid rgba(94,234,212,.16); border-radius: 50%; right: -15mm; bottom: 30mm; }
+.contracapa .marca { display: flex; align-items: center; gap: 5mm; }
+.contracapa .logo { width: 15mm; height: 15mm; border-radius: 3.5mm; background: #0f766e; border: .35mm solid rgba(94,234,212,.5); display: grid; place-items: center; }
+.contracapa .logo svg { width: 9.5mm; height: 9.5mm; }
+.contracapa .marca-nome { font-size: 17pt; font-weight: 700; letter-spacing: .5px; }
+.contracapa .marca-nome span { color: #5eead4; }
+.contracapa .marca-sub { font-size: 7.8pt; letter-spacing: 2.2px; text-transform: uppercase; color: rgba(255,255,255,.7); }
+.contracapa .eyebrow { margin-top: 30mm; font-size: 8.5pt; letter-spacing: 3px; text-transform: uppercase; color: #5eead4; font-weight: 600; }
+.contracapa h2 { color: #fff; border: 0; padding: 0; font-size: 25pt; margin: 3mm 0 9mm; }
+.contracapa .links { display: grid; gap: 4mm; }
+.contracapa .links div { border-left: 1mm solid #5eead4; padding: 3mm 5mm; background: rgba(255,255,255,.06); border-radius: 0 2mm 2mm 0; }
+.contracapa .links b { display: block; font-size: 7.8pt; letter-spacing: 1.6px; text-transform: uppercase; color: #5eead4; margin-bottom: 1mm; }
+.contracapa .links span { font-size: 10.5pt; }
+.contracapa .nota { color: rgba(255,255,255,.8); font-size: 9pt; margin-top: 9mm; max-width: 145mm; }
+.contracapa .rodape { position: absolute; left: 18mm; right: 18mm; bottom: 14mm; border-top: .25mm solid rgba(255,255,255,.22); padding-top: 4mm; font-size: 8.2pt; color: rgba(255,255,255,.72); display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+
+<div class="capa">
+  <div class="marca">
+    <div class="logo">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 29V11h8.2a6.2 6.2 0 0 1 0 12.4H17V29" stroke="#5eead4" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="28" cy="27.5" r="2.6" fill="#fbbf24"/>
+      </svg>
+    </div>
+    <div>
+      <div class="marca-nome">PREVIA<span> AI</span></div>
+      <div class="marca-sub">Customer Retention</div>
+    </div>
+  </div>
+
+  <div class="eyebrow">Relatório técnico · Machine Learning aplicado</div>
+  <h1>Prever o churn<br>antes que o cliente <em>parta</em>.</h1>
+  <p class="subtitulo">Análise da base pública IBM Telco Customer Churn, comparação de cinco algoritmos de
+  classificação, seleção justificada do modelo, calibração do limiar de decisão e implantação de um
+  painel interativo de retenção.</p>
+
+  <div class="faixa">
+    <div>7.043 clientes reais</div>
+    <div>21 atributos por cliente</div>
+    <div>5 algoritmos comparados</div>
+    <div>Gradient Boosting selecionado</div>
+    <div>PR-AUC 0,663 · ROC-AUC 0,845</div>
+  </div>
+
+  <div class="rodape">
+    <div>
+      <b>Mario Joaquim Ferreira</b>
+      Projeto Atividade 03 · github.com/Mariozhin/Atividade-03
+    </div>
+    <div style="text-align:right">
+      <b>24 de novembro de 2026</b>
+      Documento gerado a partir de artifacts/resultados.json
+    </div>
+  </div>
+</div>
+<div class="conteudo">
+<section class="sumario primeira">
+  <h2><span class="num">Navegação</span>Sumário</h2>
+  <ol><li><span class="t">Resumo executivo</span><span class="p">O problema, a solução e os números que a sustentam</span></li><li><span class="t">Contexto e definição do problema</span><span class="p">Por que churn importa e o que o modelo se propõe a fazer</span></li><li><span class="t">Base de dados</span><span class="p">Origem, estrutura, qualidade e divisão treino/teste</span></li><li><span class="t">Análise exploratória</span><span class="p">Onde o cancelamento se concentra e por quê</span></li><li><span class="t">Metodologia</span><span class="p">Protocolo experimental, métricas e prevenção de vazamento</span></li><li><span class="t">Algoritmos comparados</span><span class="p">Como cada família aprende e quais grades foram testadas</span></li><li><span class="t">Resultados</span><span class="p">Desempenho no teste, intervalos de confiança e comparação</span></li><li><span class="t">Modelo selecionado e limiar</span><span class="p">Por que o Gradient Boosting e como o ponto de operação foi escolhido</span></li><li><span class="t">Interpretabilidade</span><span class="p">Importância global, explicação local e leitura de negócio</span></li><li><span class="t">Do modelo à operação</span><span class="p">API, painel, versão estática e link público</span></li><li><span class="t">Limitações, ética e governança</span><span class="p">O que o modelo não prova e como usá-lo com responsabilidade</span></li><li><span class="t">Conclusão</span><span class="p">Síntese, contribuições e próximos passos</span></li><li><span class="t">Reprodutibilidade e referências</span><span class="p">Comandos, ambiente, sementes e fontes</span></li><li><span class="t">Anexos</span><span class="p">Dicionário de variáveis, ficha técnica e glossário</span></li></ol>
+  <div class="nota">
+    <b>Transparência sobre os dados.</b> O modelo foi treinado e avaliado sobre a base pública real
+    IBM Telco Customer Churn. Nenhum indicador deste relatório foi simulado: todos vêm de
+    <span class="mono">artifacts/resultados.json</span>, produzido por <span class="mono">src/train.py</span>.
+    Apenas os 12 perfis de <span class="mono">data/novos_clientes.csv</span> usados no simulador são
+    entradas fictícias criadas para demonstrar o uso do modelo; as probabilidades devolvidas para eles
+    são calculadas pelo modelo treinado.
+  </div>
+  <div class="callout "><span class="tit">Leitura recomendada</span>O painel publicado em <b>https://mariozhin.github.io/Atividade-03/</b> contém todas as seções deste relatório de forma interativa, incluindo simulador de risco. O PDF que você lê agora documenta a metodologia, os resultados e as limitações por trás daquele painel.</div>
+</section>
+
+<section>
+  <h2><span class="num">Seção 01</span>Resumo executivo</h2>
+  <p>O cancelamento de clientes (<i>churn</i>) é um dos principais drenos de receita em telecomunicações:
+  adquirir um cliente novo costuma custar mais do que manter um cliente existente, e o cancelamento
+  reduz a base recorrente justamente quando a operação já investiu em aquisição e instalação. Este
+  projeto constrói, mede e disponibiliza um sistema capaz de estimar a probabilidade de cancelamento
+  de cada cliente, permitindo que a equipe de retenção priorize esforços antes que a decisão do cliente
+  se concretize.</p>
+
+  <p>A base utilizada é a <b>IBM Telco Customer Churn</b>, pública e real, com <b>7.043 clientes</b>
+  e <b>21 colunas</b>. Desses clientes, <b>1.869 cancelaram</b>
+  (26,5%) e <b>5.174 permaneceram</b> — uma base desbalanceada, em que
+  a acurácia é uma métrica enganosa. Foram comparados cinco algoritmos de classificação sob o mesmo
+  protocolo, com ajuste de hiperparâmetros por validação cruzada apenas no treino e uma única avaliação
+  no teste reservado.</p>
+
+  <div class="kpis"><div class="kpi"><div class="k">Clientes na base</div><div class="v">7.043</div><div class="d">Base pública real IBM Telco</div></div><div class="kpi"><div class="k">Taxa de churn</div><div class="v">26,5%</div><div class="d">1.869 cancelaram</div></div><div class="kpi"><div class="k">PR-AUC no teste</div><div class="v">0,663</div><div class="d">Critério de seleção definido antes do teste</div></div><div class="kpi"><div class="k">Recall no limiar</div><div class="v">72,5%</div><div class="d">271 de 374 cancelamentos capturados</div></div></div>
+
+  <h3>Resultado em uma linha</h3>
+  <table class=""><thead><tr><th>Item</th><th>Valor</th></tr></thead><tbody><tr><td>Modelo selecionado</td><td><b>Gradient Boosting</b> (learning_rate=0,05 · max_depth=2 · n_estimators=150)</td></tr><tr><td>Critério de seleção</td><td>PR-AUC (<i>average precision</i>) no conjunto de teste, definido antes da avaliação</td></tr><tr><td>PR-AUC (teste)</td><td><b>0,663</b></td></tr><tr><td>ROC-AUC (teste)</td><td><b>0,845</b> (IC 95%: 0,822–0,866)</td></tr><tr><td>Limiar operacional</td><td><b>0,34</b> (escolhido por F1 em previsões out-of-fold do treino)</td></tr><tr><td>Recall / Precisão / F1</td><td><b>72,5%</b> / 57,0% / <b>0,638</b></td></tr><tr><td>Matriz de confusão</td><td>TN 831 · FP 204 · FN 103 · <b>TP 271 de 374 churners</b></td></tr></tbody></table>
+
+  <h3>O que os números mostram</h3>
+  <ul>
+    <li><b>O modelo captura a maior parte dos cancelamentos.</b> No limiar 0,34, ele sinaliza
+    271 dos 374 clientes que efetivamente cancelaram no teste (72,5% de recall),
+    com precisão de 57,0%.</li>
+    <li><b>Há um custo de triagem explícito.</b> Para capturar esses 271 clientes, a fila de retenção inclui
+    204 clientes que permaneceriam — os falsos alarmes. O limiar é o botão que regula esse trade-off,
+    e não um detalhe técnico.</li>
+    <li><b>A escolha do algoritmo foi baseada em métrica adequada ao desbalanceamento.</b> O Gradient Boosting
+    obteve o maior PR-AUC (0,663) e o melhor F1 no limiar (0,638). O XGBoost ficou próximo
+    (PR-AUC 0,658), mas com F1 menor.</li>
+    <li><b>O baseline revela o perigo da acurácia.</b> Um classificador que sempre responde “não cancela”
+    acerta 73,5% dos casos e ainda assim tem recall zero: não encontra um único cliente em risco.</li>
+    <li><b>O modelo é interpretável e operacionalizável.</b> Importâncias por permutação, explicações SHAP na API
+    e um painel web permitem transformar a probabilidade em ação de retenção priorizada.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="num">Seção 02</span>Contexto e definição do problema</h2>
+  <p>Em serviços por assinatura, o cliente pode encerrar o vínculo a qualquer momento. Quando isso ocorre,
+  a empresa perde a receita futura, o custo de aquisição já incorrido e, muitas vezes, a oportunidade de
+  vender serviços adicionais. Em telecomunicações, a competição por preço, a maturidade do mercado e a
+  facilidade de troca de operadora tornam a retenção um problema permanente de operação — não apenas
+  um evento pontual.</p>
+
+  <p>A pergunta deste projeto é deliberadamente restrita: <b>dado o perfil contratual e de consumo de um
+  cliente, qual é a probabilidade de ele cancelar?</b> O objetivo não é explicar causalmente por que o
+  cliente cancela, nem prever a data exata do cancelamento. É produzir um <b>ranking de risco</b> confiável
+  o suficiente para orientar a fila de retenção, acompanhado de uma estimativa de probabilidade que
+  permita comparar clientes e dimensionar o esforço.</p>
+
+  <h3>Por que tratar o problema como classificação binária</h3>
+  <p>O alvo observado na base é binário (<span class="mono">Churn = Yes/No</span>). Formalmente, queremos
+  aprender uma função <span class="mono">f(x) → [0,1]</span> que estime <span class="mono">P(Churn = Yes | x)</span>
+  a partir de 21 atributos. A saída contínua é preferível a uma resposta binária seca porque permite:</p>
+  <ul>
+    <li>ordenar clientes por risco e concentrar o esforço nos mais altos;</li>
+    <li>escolher um limiar de decisão compatível com a capacidade da equipe de retenção;</li>
+    <li>comunicar incerteza e calibrar ofertas (um cliente com 80% de risco não é o mesmo que um com 35%);</li>
+    <li>monitorar a distribuição dos scores ao longo do tempo, mesmo sem rótulos imediatos.</li>
+  </ul>
+
+  <h3>Requisitos do projeto</h3>
+  <div class="tres">
+    <div class="callout" style="margin:0"><span class="tit">Rigor</span>Divisão treino/teste antes de qualquer ajuste;
+    pré-processamento dentro do pipeline; nenhuma informação do teste usada para escolher modelo ou limiar.</div>
+    <div class="callout" style="margin:0"><span class="tit">Utilidade</span>Métrica adequada a classes desbalanceadas;
+    ponto de operação justificado; saída interpretável para quem toma a decisão de contatar o cliente.</div>
+    <div class="callout" style="margin:0"><span class="tit">Reprodutibilidade</span>Semente fixa, artefatos persistidos,
+    scripts de treino e de geração do relatório, além de uma versão publicada que dispensa servidor.</div>
+  </div>
+
+  <h3>Questões que o estudo responde</h3>
+  <ol>
+    <li>Quais variáveis concentram o sinal de cancelamento nesta base?</li>
+    <li>Qual algoritmo entrega o melhor equilíbrio precisão/recall para a classe minoritária?</li>
+    <li>Qual limiar de decisão traduz o modelo em uma operação viável?</li>
+    <li>O desempenho se sustenta fora da amostra de treino, com incerteza quantificada?</li>
+    <li>Como levar o resultado para uma interface acessível sem comprometer a fidelidade dos números?</li>
+  </ol>
+
+  <p class="muted small">Escopo excluído: causalidade, uplift (efeito de uma oferta específica), séries temporais
+  de cancelamento e precificação. Esses temas aparecem nas limitações e nos próximos passos.</p>
+</section>
+
+<section>
+  <h2><span class="num">Seção 03</span>Base de dados</h2>
+  <p>A base é a <b>IBM Telco Customer Churn</b>, disponibilizada publicamente pela IBM e amplamente usada como
+  referência em problemas de retenção. Ela descreve uma operadora de telecomunicações com
+  <b>7.043 clientes</b>, <b>21 colunas</b> e um rótulo histórico de cancelamento.
+  Todos os rótulos são observados — não há dados sintéticos no treino ou na avaliação.</p>
+
+  <table class=""><thead><tr><th>Aspecto</th><th>Conteúdo</th></tr></thead><tbody><tr><td>Fonte</td><td>IBM Telco Customer Churn (pública)</td></tr><tr><td>URL</td><td>raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/master/data/Telco-Customer-Churn.csv</td></tr><tr><td>Registros</td><td><b>7.043</b> clientes</td></tr><tr><td>Colunas brutas</td><td>21 (19 atributos + customerID + alvo Churn)</td></tr><tr><td>Atributos no modelo</td><td><b>21</b> (19 originais + 2 derivados)</td></tr><tr><td>Alvo</td><td>Churn: Yes (cancelou) / No (permaneceu)</td></tr><tr><td>Taxa de churn</td><td><b>26,5%</b> — 1.869 cancelaram e 5.174 permaneceram</td></tr><tr><td>Divisão</td><td>80/20 estratificada: <b>5.634 treino</b> / <b>1.409 teste</b> (semente 42)</td></tr><tr><td>Valores ausentes</td><td>11 células em branco em TotalCharges (clientes com tenure = 0)</td></tr><tr><td>Colunas após one-hot</td><td>47 colunas numéricas (com agrupamento de categorias raras)</td></tr></tbody></table>
+
+  <h3>Qualidade e tratamento</h3>
+  <p>A única ausência relevante está em <span class="mono">TotalCharges</span>: 11
+  clientes com tempo de casa zero ainda não haviam sido faturados. O valor foi convertido para número e
+  preenchido com <b>0</b>, decisão coerente com o significado do campo. O identificador
+  <span class="mono">customerID</span> foi removido para evitar memorização de identidades. As categorias
+  raras foram agrupadas pelo <span class="mono">OneHotEncoder</span> (<span class="mono">min_frequency=10</span>),
+  reduzindo dimensionalidade sem perder o sinal das categorias frequentes.</p>
+
+  <h3>Engenharia de atributos</h3>
+  <p>Dois atributos derivados foram criados de forma determinística, dentro da mesma função usada em treino
+  e inferência:</p>
+  <ul>
+    <li><b>ServicosContratados:</b> contagem de serviços de valor agregado contratados (segurança, backup,
+    proteção, suporte, streaming de TV e de filmes), de 0 a 6.</li>
+    <li><b>CobrancaMedia:</b> <span class="mono">TotalCharges ÷ tenure</span>; quando <span class="mono">tenure = 0</span>,
+    usa a cobrança mensal corrente como <i>proxy</i>, evitando divisão por zero.</li>
+  </ul>
+  <p>Esses atributos condensam informação que o modelo dificilmente reconstruiria sozinho com árvores rasas:
+  a intensidade de uso de serviços e o gasto médio efetivo por mês de relacionamento.</p>
+</section>
+
+<section>
+  <h2><span class="num">Seção 04</span>Análise exploratória</h2>
+  <p>Antes de escolher qualquer algoritmo, a base foi examinada para entender onde o cancelamento se
+  concentra. Os gráficos abaixo são calculados sobre os 7.043 registros e explicam por que
+  variáveis como tipo de contrato e tempo de casa carregam tanto sinal preditivo.</p>
+
+  <div class="duas">
+    <div><figure><img src="figuras/churn_contrato.png" alt="Taxa de churn por tipo de contrato. Contratos mensais concentram risco quase quatro vezes maior que contratos de dois anos."><figcaption><b>Figura 1.</b> Taxa de churn por tipo de contrato. Contratos mensais concentram risco quase quatro vezes maior que contratos de dois anos.</figcaption></figure></div>
+    <div><figure><img src="figuras/churn_tenure.png" alt="Taxa de churn por faixa de tempo de casa. O risco cai monotonicamente com a permanência."><figcaption><b>Figura 2.</b> Taxa de churn por faixa de tempo de casa. O risco cai monotonicamente com a permanência.</figcaption></figure></div>
+  </div>
+
+  <figure><img src="figuras/internet_pagamento.png" alt="Churn por serviço de internet (à esquerda) e por forma de pagamento (à direita). Fibra óptica e cheque eletrônico aparecem como os grupos de maior risco."><figcaption><b>Figura 3.</b> Churn por serviço de internet (à esquerda) e por forma de pagamento (à direita). Fibra óptica e cheque eletrônico aparecem como os grupos de maior risco.</figcaption></figure>
+
+  <div class="lado">
+    <div>
+      <figure><img src="figuras/hist_mensalidade.png" alt="Distribuição da cobrança mensal dentro de cada classe, em percentual da própria classe. Quem cancela tende a pagar mais por mês."><figcaption><b>Figura 4.</b> Distribuição da cobrança mensal dentro de cada classe, em percentual da própria classe. Quem cancela tende a pagar mais por mês.</figcaption></figure>
+    </div>
+    <div>
+      <figure><img src="figuras/servicos.png" alt="Churn por quantidade de serviços de valor agregado. Mais serviços contratados associam-se a menor cancelamento."><figcaption><b>Figura 5.</b> Churn por quantidade de serviços de valor agregado. Mais serviços contratados associam-se a menor cancelamento.</figcaption></figure>
+    </div>
+  </div>
+
+  <figure><img src="figuras/correlacao.png" alt="Correlação de Pearson entre variáveis numéricas e o churn. Tempo de casa é a correlação negativa mais forte; cobrança mensal e média são positivas."><figcaption><b>Figura 6.</b> Correlação de Pearson entre variáveis numéricas e o churn. Tempo de casa é a correlação negativa mais forte; cobrança mensal e média são positivas.</figcaption></figure>
+
+  <h3>Leituras que orientam o modelo</h3>
+  <ul>
+    <li><b>Contrato mensal é o maior bolsão de risco.</b> 42,7% dos clientes
+    nesse regime cancelaram, contra 11,3% no contrato de um ano e
+    2,8% no de dois anos. O contrato funciona como um compromisso que
+    reduz a oportunidade de saída — e o modelo aprende essa associação.</li>
+    <li><b>O risco é maior no começo do relacionamento.</b> Na faixa de 0 a 6 meses, a taxa é
+    52,9%; após 49 meses, cai para 9,5%.
+    A média de tempo de casa de quem cancelou é 18,00 meses, contra
+    37,60 de quem ficou.</li>
+    <li><b>Fibra óptica e cheque eletrônico pedem atenção.</b> A fibra tem 7,4%
+    de churn (contra 19,0% no DSL e 41,9% sem internet),
+    e o cheque eletrônico chega a 45,3%,
+    bem acima dos débitos automáticos. São associações, não causas: pode haver seleção de perfil por trás delas.</li>
+    <li><b>Preço pesa.</b> A cobrança média mensal de quem cancelou é 74,44,
+    contra 61,27 de quem ficou.</li>
+    <li><b>Vínculo por serviços reduz risco.</b> Clientes com seis serviços de valor agregado têm
+    5,3% de churn; com apenas um serviço, 45,8%.
+    A relação não é perfeitamente monotônica na base inteira, mas o padrão geral é claro.</li>
+  </ul>
+
+  <h3>Por que a acurácia não basta</h3>
+  <p>Um classificador que sempre responde “não cancela” acerta <b>73,5%</b> dos casos e tem
+  <b>recall zero</b>: não identifica nenhum cliente em risco. A acurácia premia o acerto na classe majoritária
+  e esconde o custo operacional do problema. Por isso o critério de seleção foi o <b>PR-AUC</b>
+  (<i>average precision</i>), que olha para a classe positiva, e o ponto de operação foi escolhido por F1
+  nas previsões out-of-fold do treino.</p>
+
+  <div class="callout amber"><span class="tit">Cuidado com leitura causal</span>As associações acima descrevem quem cancela, não necessariamente o que faria alguém deixar de cancelar. Um contrato de dois anos está associado a menor churn, mas forçar a migração contratual não garante o mesmo efeito. O modelo é uma ferramenta de priorização, não de política comercial.</div>
+</section>
+
+<section>
+  <h2><span class="num">Seção 05</span>Metodologia</h2>
+  <p>O protocolo foi desenhado para responder a uma pergunta simples: <b>qual modelo entrega o melhor
+  ranking de risco, medido de forma honesta?</b> Para isso, todas as decisões que poderiam “espiar” o teste
+  foram tomadas antes da avaliação final, e o teste foi usado uma única vez.</p>
+
+  <div class="fluxo">
+    <div class="etapa"><b>Dados</b><span>7.043 clientes</span></div>
+    <div class="seta">→</div>
+    <div class="etapa"><b>Limpeza</b><span>tipos + 2 derivados</span></div>
+    <div class="seta">→</div>
+    <div class="etapa"><b>Divisão</b><span>80/20 estratificada</span></div>
+    <div class="seta">→</div>
+    <div class="etapa"><b>Pipeline</b><span>scaler + one-hot</span></div>
+    <div class="seta">→</div>
+    <div class="etapa"><b>Busca</b><span>5 folds · ROC-AUC</span></div>
+    <div class="seta">→</div>
+    <div class="etapa"><b>Teste</b><span>uma única avaliação</span></div>
+  </div>
+
+  <h3>Etapas</h3>
+  <ol>
+    <li><b>Limpeza e engenharia de atributos</b> em <span class="mono">src/features.py</span>, fonte única para
+    treino e inferência.</li>
+    <li><b>Divisão estratificada 80/20</b> com semente 42: 5.634 clientes para
+    treino e 1.409 para teste, preservando a taxa de churn.</li>
+    <li><b>Pré-processamento dentro do Pipeline:</b> padronização das seis variáveis numéricas e one-hot das
+    quinze categóricas com agrupamento de categorias raras. Ajuste apenas no treino.</li>
+    <li><b>Busca de hiperparâmetros</b> por <span class="mono">GridSearchCV</span> com 5 folds estratificados,
+    otimizando ROC-AUC. A métrica de busca é independente de limiar e menos sensível ao desbalanceamento
+    que a acurácia.</li>
+    <li><b>Previsões out-of-fold (OOF)</b> no treino para escolher o limiar por F1, de modo que o teste não
+    participe dessa decisão.</li>
+    <li><b>Avaliação final única</b> no teste reservado, com métricas no limiar 0,50 e no limiar operacional.</li>
+    <li><b>Incerteza:</b> intervalos de confiança de 95% por bootstrap (2.000 reamostragens).</li>
+    <li><b>Interpretação:</b> importância por permutação no teste e explicações SHAP na API.</li>
+  </ol>
+
+  <h3>Prevenção de vazamento</h3>
+  <p>A divisão é feita <b>antes</b> de qualquer limpeza ou transformação. <span class="mono">StandardScaler</span>
+  e <span class="mono">OneHotEncoder</span> vivem dentro de um <span class="mono">Pipeline</span> ajustado
+  somente nos 5.634 clientes de treino. Isso significa que médias, desvios e categorias
+  não “veem” o teste. O mesmo módulo <span class="mono">src/features.py</span> é usado pelo treino e pela API,
+  eliminando divergência entre treino e produção (<i>train/serve skew</i>).</p>
+
+  <div class="callout amber"><span class="tit">Por que a divisão estratificada importa</span>Com 26,5% de churn, uma divisão puramente aleatória poderia produzir conjuntos com taxas diferentes por acaso. A estratificação preserva a proporção de cancelamentos em treino e teste, tornando a comparação entre modelos mais estável — especialmente importante para a classe minoritária.</div>
+
+  <h3>Métricas e por que cada uma foi usada</h3>
+  <table class=""><thead><tr><th>Métrica</th><th>O que mede</th><th>Papel no projeto</th></tr></thead><tbody><tr><td>ROC-AUC</td><td>Capacidade de ordenar positivos acima de negativos em todos os limiares</td><td>Comparação entre modelos e busca de hiperparâmetros</td></tr><tr><td>PR-AUC</td><td>Área sob a curva precisão × recall, focada na classe positiva</td><td><b>Critério de seleção</b> — adequado ao desbalanceamento</td></tr><tr><td>Precisão</td><td>Dos clientes sinalizados, quantos realmente cancelaram</td><td>Custo de falsos alarmes na fila de retenção</td></tr><tr><td>Recall</td><td>Dos clientes que cancelaram, quantos foram sinalizados</td><td>Cobertura do problema; métrica central para retenção</td></tr><tr><td>F1</td><td>Média harmônica entre precisão e recall</td><td>Escolha do limiar operacional (OOF do treino)</td></tr><tr><td>Brier</td><td>Erro quadrático médio das probabilidades</td><td>Qualidade da calibração das probabilidades</td></tr><tr><td>Acurácia</td><td>Acertos totais</td><td>Apenas descritiva; não usada para selecionar</td></tr></tbody></table>
+
+  <h3>Escolha do limiar</h3>
+  <p>O modelo devolve uma probabilidade; a operação precisa de uma decisão binária. O limiar foi escolhido
+  maximizando F1 nas previsões OOF do treino, resultando em <b>0,34</b>. Esse valor não foi
+  ajustado no teste. A seção 8 mostra o efeito de outros limiares e discute o trade-off em termos de negócio.</p>
+
+  <h3>Comparação justa entre algoritmos</h3>
+  <p>Todos os candidatos foram treinados nos mesmos 5.634 clientes, avaliados nos mesmos
+  1.409 clientes, com o mesmo pré-processamento e a mesma grade de validação. Nenhum
+  algoritmo recebeu tratamento privilegiado. As grades e os tempos de busca são apresentados na próxima seção.</p>
+
+  <div class="callout "><span class="tit">Semente e determinismo</span>Todo o experimento usa a semente 42. O treino completo levou 41,30 s e é determinístico para esta versão das bibliotecas. Se o modelo for retreinado, a API precisa ser reiniciada porque mantém os resultados em cache.</div>
+</section>
+
+<section>
+  <h2><span class="num">Seção 06</span>Algoritmos comparados</h2>
+  <p>Cinco famílias diferentes foram colocadas lado a lado. A diversidade é intencional: modelos lineares
+  oferecem simplicidade e interpretabilidade; árvores capturam interações; ensembles reduzem variância ou
+  corrigem viés de forma sequencial. Comparar todos sob o mesmo protocolo evita escolher por preferência
+  pessoal.</p>
+
+  <h3>1. Regressão Logística</h3>
+  <p>Modelo linear que estima o log-odds do churn como combinação das variáveis:
+  <span class="mono">log(p/(1−p)) = β₀ + βᵀx</span>. É simples, estável e altamente interpretável, mas precisa
+  que interações e não linearidades sejam representadas explicitamente. A regularização controla overfitting;
+  o parâmetro <span class="mono">class_weight</span> permite compensar o desbalanceamento. Serviu como
+  referência forte de simplicidade.</p>
+
+  <h3>2. Árvore de Decisão (CART)</h3>
+  <p>Uma única árvore particiona o espaço de atributos com cortes que maximizam a pureza dos nós. É fácil de
+  explicar, mas instável: pequenas mudanças nos dados podem mudar a estrutura. A profundidade e o número
+  mínimo de folhas foram limitados para evitar decorar o treino. Mesmo assim, foi o modelo com maior recall
+  e menor precisão — muitos alarmes falsos.</p>
+
+  <h3>3. Random Forest</h3>
+  <p>Um ensemble de muitas árvores treinadas em amostras <i>bootstrap</i> e subconjuntos aleatórios de
+  atributos. A média reduz a variância da árvore única e melhora a generalização. O parâmetro
+  <span class="mono">class_weight</span> foi testado para dar mais peso à classe minoritária. É robusto,
+  porém menos interpretável e, neste problema, ficou atrás em PR-AUC.</p>
+
+  <h3>4. Gradient Boosting</h3>
+  <p>Ensemble aditivo de árvores rasas. Cada nova árvore é ajustada ao resíduo (gradiente negativo da
+  entropia cruzada) das anteriores e somada com fator de aprendizado ν:</p>
+  <div class="codigo">F₀(x) = log(p / (1 − p))
+rᵢ   = yᵢ − sigmoid(F_{m−1}(xᵢ))
+Fₘ(x) = F_{m−1}(x) + ν · hₘ(x)
+P(churn) = sigmoid(F_M(x))</div>
+  <p>Árvores de profundidade 2 capturam interações simples (por exemplo, contrato mensal <b>e</b> pouco tempo
+  de casa) sem decorar o treino. A taxa de aprendizado baixa (0,05) com 150 árvores produz um ajuste suave
+  e calibrado. Foi o modelo selecionado.</p>
+
+  <h3>5. XGBoost</h3>
+  <p>Implementação de gradient boosting com regularização explícita, otimização de segunda ordem e
+  tratamento eficiente de dados esparsos. É uma alternativa industrial forte e ficou muito próxima do
+  Gradient Boosting do scikit-learn. A grade incluiu <span class="mono">scale_pos_weight</span> para
+  compensar o desbalanceamento. A diferença final de PR-AUC foi pequena, mas o F1 no limiar foi menor.</p>
+
+  <h3>Grades de busca e custo computacional</h3>
+  <table class="compacta"><thead><tr><th>Algoritmo</th><th>Família</th><th>Melhores hiperparâmetros</th><th>Combinações</th><th>Tempo</th></tr></thead><tbody><tr><td>Regressao Logistica</td><td>Modelo linear (regressao logistica)</td><td><span class='mono'>C=10.0, class_weight=None</span></td><td>6</td><td>4,3 s</td></tr><tr><td>Arvore de Decisao</td><td>Arvore única (CART)</td><td><span class='mono'>class_weight=balanced, max_depth=5, min_samples_leaf=50</span></td><td>24</td><td>1,5 s</td></tr><tr><td>Random Forest</td><td>Ensemble de árvores (bagging)</td><td><span class='mono'>class_weight=balanced, max_depth=10, max_features=sqrt, min_samples_leaf=5</span></td><td>8</td><td>7,4 s</td></tr><tr><td><b>Gradient Boosting</b></td><td>Ensemble de árvores (boosting)</td><td><span class='mono'>learning_rate=0.05, max_depth=2, n_estimators=150</span></td><td>8</td><td>9,2 s</td></tr><tr><td>XGBoost</td><td>Gradient boosting regularizado</td><td><span class='mono'>learning_rate=0.05, max_depth=3, n_estimators=200, scale_pos_weight=1</span></td><td>16</td><td>6,6 s</td></tr></tbody></table>
+  <p class="small muted">Tempos medidos no ambiente de treino (uma execução, semente 42). O tempo total
+  do experimento, incluindo avaliação e artefatos, foi de 41,30 s.</p>
+
+  <div class="callout "><span class="tit">Por que não escolher o mais complexo</span>O XGBoost é mais sofisticado, mas sofisticação não é o critério. O Gradient Boosting do scikit-learn venceu em PR-AUC e F1, com um modelo menor (150 árvores de profundidade 2) e sem dependência extra de biblioteca no artefato final. A escolha foi guiada pela métrica, não pela novidade do algoritmo.</div>
+</section>
+
+<section>
+  <h2><span class="num">Seção 07</span>Resultados</h2>
+  <p>Todos os modelos foram avaliados no mesmo conjunto de 1.409 clientes, que não participou
+  do treino nem da escolha de hiperparâmetros ou limiar. A tabela ordena os modelos pelo critério de seleção
+  definido antes do teste: PR-AUC.</p>
+
+  <div class="kpis"><div class="kpi"><div class="k">PR-AUC do selecionado</div><div class="v">0,663</div><div class="d">Maior entre os cinco modelos</div></div><div class="kpi"><div class="k">ROC-AUC do selecionado</div><div class="v">0,845</div><div class="d">IC 95%: 0,822–0,866</div></div><div class="kpi"><div class="k">Recall no limiar 0,34</div><div class="v">72,5%</div><div class="d">271 de 374 cancelamentos</div></div><div class="kpi"><div class="k">Falsos positivos</div><div class="v">204</div><div class="d">Precisão de 57,0%</div></div></div>
+
+  <table class="compacta num"><thead><tr><th>Modelo</th><th>ROC-AUC (CV)</th><th>PR-AUC</th><th>ROC-AUC</th><th>F1@limiar</th><th>Recall@limiar</th><th>Precisão@limiar</th><th>Limiar</th></tr></thead><tbody><tr><td><b>Gradient Boosting</b></td><td>0,850 ± 0,012</td><td><b>0,663</b></td><td>0,845</td><td>0,638</td><td>72,5%</td><td>57,0%</td><td>0,34</td></tr><tr><td>XGBoost</td><td>0,848 ± 0,011</td><td><b>0,658</b></td><td>0,844</td><td>0,632</td><td>75,7%</td><td>54,2%</td><td>0,32</td></tr><tr><td>Random Forest</td><td>0,847 ± 0,009</td><td><b>0,652</b></td><td>0,841</td><td>0,627</td><td>79,4%</td><td>51,7%</td><td>0,48</td></tr><tr><td>Arvore de Decisao</td><td>0,832 ± 0,014</td><td><b>0,628</b></td><td>0,836</td><td>0,625</td><td>73,5%</td><td>54,4%</td><td>0,59</td></tr><tr><td>Regressao Logistica</td><td>0,846 ± 0,013</td><td><b>0,628</b></td><td>0,841</td><td>0,615</td><td>71,4%</td><td>54,0%</td><td>0,34</td></tr><tr><td>Baseline (classe majoritaria)</td><td>—</td><td>0,265*</td><td>0,500</td><td>—</td><td>0,0%</td><td>—</td><td>—</td></tr></tbody></table>
+  <p class="small muted">* O PR-AUC de um classificador aleatório equivale à prevalência da classe positiva
+  (26,5%). ROC-AUC de CV é a média de 5 folds no treino; as demais métricas são do teste.
+  F1, recall e precisão usam o limiar operacional de cada modelo, escolhido por F1 out-of-fold no treino.</p>
+
+  <div class="duas">
+    <div><figure><img src="figuras/roc.png" alt="Curvas ROC dos cinco modelos no teste. O Gradient Boosting (linha grossa) tem a maior área, mas a diferença em relação a Random Forest e XGBoost é pequena."><figcaption><b>Figura 7.</b> Curvas ROC dos cinco modelos no teste. O Gradient Boosting (linha grossa) tem a maior área, mas a diferença em relação a Random Forest e XGBoost é pequena.</figcaption></figure></div>
+    <div><figure><img src="figuras/pr.png" alt="Curva precisão × recall do modelo selecionado. A linha tracejada é o desempenho de um classificador aleatório (prevalência de 26,5%)."><figcaption><b>Figura 8.</b> Curva precisão × recall do modelo selecionado. A linha tracejada é o desempenho de um classificador aleatório (prevalência de 26,5%).</figcaption></figure></div>
+  </div>
+
+  <figure><img src="figuras/comparacao.png" alt="PR-AUC e F1 no limiar por algoritmo. O Gradient Boosting combina o maior PR-AUC com o maior F1; Random Forest tem recall alto, mas precisão baixa."><figcaption><b>Figura 9.</b> PR-AUC e F1 no limiar por algoritmo. O Gradient Boosting combina o maior PR-AUC com o maior F1; Random Forest tem recall alto, mas precisão baixa.</figcaption></figure>
+
+  <h3>Leitura dos resultados</h3>
+  <ul>
+    <li><b>Gradient Boosting venceu nas duas métricas que importam.</b> PR-AUC 0,663 e F1
+    0,638 no limiar operacional. O XGBoost ficou a 0,005
+    de PR-AUC, mas com F1 0,632.</li>
+    <li><b>Random Forest prioriza recall.</b> Sinaliza 79,4%
+    dos cancelamentos, porém com precisão de 51,7%:
+    mais clientes corretos encontrados, mais falsos alarmes. Para uma equipe com capacidade limitada, isso
+    pode ser pior do que o Gradient Boosting.</li>
+    <li><b>A árvore única é instável.</b> Alto recall e baixa precisão, com ROC-AUC inferior. É um exemplo
+    clássico de modelo que reage bem à classe minoritária, mas paga o preço em alarmes falsos.</li>
+    <li><b>A regressão logística é competitiva.</b> Com apenas 6 combinações de hiperparâmetros, alcança
+    PR-AUC 0,628. Se a interpretabilidade linear fosse
+    requisito absoluto, seria uma alternativa defensável.</li>
+    <li><b>O ganho do modelo sobre o acaso é grande.</b> O PR-AUC de 0,663 é cerca de
+    2,50× a prevalência; o ROC-AUC de 0,845 confirma boa
+    separação global.</li>
+  </ul>
+
+  <h3>Incerteza das estimativas</h3>
+  <p>Um número único esconde a variabilidade amostral. Os intervalos de confiança de 95% por bootstrap
+  (2.000 reamostragens do teste) mostram a faixa plausível para cada métrica do modelo selecionado:</p>
+  <table class="compacta num"><thead><tr><th>Métrica</th><th>Estimativa</th><th>IC 95%</th></tr></thead><tbody><tr><td>Recall (cancelou)</td><td><b>72,5%</b></td><td>67,7% – 76,9%</td></tr><tr><td>Precisão</td><td>57,0%</td><td>52,4% – 61,4%</td></tr><tr><td>F1</td><td><b>0,638</b></td><td>0,598 – 0,676</td></tr><tr><td>ROC-AUC</td><td>0,845</td><td>0,822 – 0,866</td></tr><tr><td>PR-AUC</td><td>0,663</td><td>— (não bootstrapped no artefato)</td></tr><tr><td>Brier</td><td>0,136</td><td>—</td></tr></tbody></table>
+  <p>O recall pode variar de 67,7% a 76,9% em outra amostra do mesmo processo.
+  Isso é relevante para expectativas operacionais: prometer “capturamos 72%” sem essa faixa seria
+  excesso de confiança. A decisão individual deve combinar o score com julgamento humano.</p>
+
+  <h3>Calibração</h3>
+  <p>O Brier score de 0,136 e a curva de calibração mostram que as probabilidades não são apenas
+  um ranking: elas aproximam a frequência observada. Nas faixas altas, a taxa observada de churn acompanha
+  a probabilidade prevista; nas faixas baixas há alguma subestimação, mas o modelo não produz probabilidades
+  absurdas. Isso permite usar o score para dimensionar a fila de retenção.</p>
+  <figure><img src="figuras/calibracao.png" alt="Curva de calibração em 10 faixas de probabilidade. A diagonal tracejada representa calibração perfeita; os pontos seguem de perto a diagonal nas faixas de risco alto."><figcaption><b>Figura 10.</b> Curva de calibração em 10 faixas de probabilidade. A diagonal tracejada representa calibração perfeita; os pontos seguem de perto a diagonal nas faixas de risco alto.</figcaption></figure>
+</section>
+
+<section>
+  <h2><span class="num">Seção 08</span>Modelo selecionado e limiar de decisão</h2>
+  <p>O modelo escolhido é o <b>Gradient Boosting</b> com <span class="mono">learning_rate=0,05</span>,
+  <span class="mono">max_depth=2</span> e <span class="mono">n_estimators=150</span>. Ele é um ensemble de
+  150 árvores rasas que se corrigem sequencialmente; a baixa profundidade limita a capacidade de decorar
+  o treino, e a taxa de aprendizado pequena suaviza o ajuste.</p>
+
+  <h3>Justificativa da escolha</h3>
+  <p>O critério foi definido antes da avaliação: maior PR-AUC no teste. O Gradient Boosting obteve
+  <b>0,663</b>, à frente de XGBoost (0,658),
+  Random Forest (0,652), Árvore de Decisão
+  (0,628) e Regressão Logística
+  (0,628). Como desempate e validação de utilidade,
+  também apresentou o maior F1 no limiar operacional (0,638). A escolha não foi feita olhando o
+  teste repetidamente: o teste foi aberto uma vez, ao final.</p>
+
+  <div class="kpis"><div class="kpi"><div class="k">Acurácia</div><div class="v">78,2%</div><div class="d">No limiar 0,34</div></div><div class="kpi"><div class="k">Precisão</div><div class="v">57,0%</div><div class="d">Dos sinalizados, quantos cancelaram</div></div><div class="kpi"><div class="k">Recall</div><div class="v">72,5%</div><div class="d">Dos cancelamentos, quantos foram vistos</div></div><div class="kpi"><div class="k">F1</div><div class="v">0,638</div><div class="d">Equilíbrio precisão/recall</div></div></div>
+
+  <h3>O limiar como decisão de negócio</h3>
+  <p>O limiar de 0,34 foi escolhido maximizando F1 nas previsões out-of-fold do treino. Ele não é sagrado:
+  se a equipe de retenção tem pouca capacidade, subir o limiar reduz falsos alarmes e aumenta a precisão,
+  ao custo de deixar passar mais cancelamentos. Se o custo de perder um cliente é muito alto, descer o
+  limiar amplia a cobertura. A tabela abaixo, calculada sobre as probabilidades reais do teste, mostra o
+  efeito concreto dessa escolha:</p>
+
+  <table class="compacta num"><thead><tr><th>Limiar</th><th>Acionados</th><th>TP</th><th>FP</th><th>FN</th><th>Recall</th><th>Precisão</th><th>F1</th></tr></thead><tbody><tr><td>0,20</td><td>659</td><td>314</td><td>345</td><td>60</td><td>84,0%</td><td>47,6%</td><td>0,608</td></tr><tr><td>0,30</td><td>536</td><td>287</td><td>249</td><td>87</td><td>76,7%</td><td>53,5%</td><td>0,631</td></tr><tr><td><span class="destaque"><b>0,34</b></span></td><td><span class="destaque">475</span></td><td><span class="destaque">271</span></td><td><span class="destaque">204</span></td><td><span class="destaque">103</span></td><td><span class="destaque">72,5%</span></td><td><span class="destaque">57,1%</span></td><td><span class="destaque">0,638</span></td></tr><tr><td>0,50</td><td>288</td><td>188</td><td>100</td><td>186</td><td>50,3%</td><td>65,3%</td><td>0,568</td></tr><tr><td>0,60</td><td>176</td><td>128</td><td>48</td><td>246</td><td>34,2%</td><td>72,7%</td><td>0,465</td></tr></tbody></table>
+  <p class="small muted">TP = cancelamentos corretamente sinalizados; FP = clientes que permaneceriam mas
+  entram na fila; FN = cancelamentos não detectados. “Acionados” = TP + FP.</p>
+
+  <div class="duas">
+    <div>
+      <figure><img src="figuras/matriz.png" alt="Matriz de confusão do modelo no limiar operacional. De 374 cancelamentos, 271 foram capturados; 204 clientes que ficariam também foram sinalizados."><figcaption><b>Figura 11.</b> Matriz de confusão do modelo no limiar operacional. De 374 cancelamentos, 271 foram capturados; 204 clientes que ficariam também foram sinalizados.</figcaption></figure>
+    </div>
+    <div>
+      <figure><img src="figuras/limiar.png" alt="Precisão, recall e F1 ao longo do limiar. A linha vertical marca o ponto escolhido (0,34) no treino out-of-fold; a curva é calculada no teste apenas para visualização."><figcaption><b>Figura 12.</b> Precisão, recall e F1 ao longo do limiar. A linha vertical marca o ponto escolhido (0,34) no treino out-of-fold; a curva é calculada no teste apenas para visualização.</figcaption></figure>
+    </div>
+  </div>
+
+  <h3>Interpretação operacional</h3>
+  <ul>
+    <li>Com limiar 0,34, a fila contém <b>475 clientes</b>; 271 realmente
+    cancelariam e 204 não cancelariam. A precisão de 57,0% significa que pouco mais da
+    metade da fila é “acerto”.</li>
+    <li>O modelo deixa passar <b>103 cancelamentos</b> (falsos negativos). Nenhum modelo desta base
+    captura todos; o objetivo é reduzir esse número sem inflar a fila além da capacidade.</li>
+    <li>Se a operação só puder contatar, por exemplo, 300 clientes por semana, o limiar deve ser calibrado
+    para esse volume — não copiado de um artigo. O score permite simular esse dimensionamento.</li>
+    <li>O ponto de operação deve ser reavaliado quando o custo de retenção, a capacidade da equipe ou a
+    taxa de churn mudarem. Ele é uma escolha de negócio, não uma propriedade do algoritmo.</li>
+  </ul>
+
+  <div class="callout amber"><span class="tit">Um detalhe que evita autoengano</span>O limiar foi escolhido com previsões out-of-fold do treino, nunca com o teste. Se tivéssemos varrido o limiar no teste e reportado o melhor F1, o número seria otimista. A tabela acima mostra o teste para transparência, mas a decisão de 0,34 já estava tomada antes de olhá-lo.</div>
+</section>
+
+<section>
+  <h2><span class="num">Seção 09</span>Interpretabilidade</h2>
+  <p>Um score sem explicação é difícil de operacionalizar. A interpretação foi tratada em dois níveis:
+  <b>global</b>, para entender quais atributos o modelo mais usa, e <b>local</b>, para justificar a
+  probabilidade de um cliente específico.</p>
+
+  <h3>Importância global</h3>
+  <p>A importância por permutação mede quanto o ROC-AUC cai quando um atributo é embaralhado no teste,
+  destruindo sua relação com o alvo. É uma medida agnóstica ao modelo e complementa a importância nativa
+  das árvores.</p>
+  <figure><img src="figuras/importancia.png" alt="Queda de ROC-AUC ao embaralhar cada atributo no teste (média ± desvio em 10 permutações). Tempo de casa e tipo de contrato dominam."><figcaption><b>Figura 13.</b> Queda de ROC-AUC ao embaralhar cada atributo no teste (média ± desvio em 10 permutações). Tempo de casa e tipo de contrato dominam.</figcaption></figure>
+  <table class="compacta num"><thead><tr><th>Atributo</th><th>Queda de ROC-AUC</th><th>Desvio</th></tr></thead><tbody><tr><td>Tempo de casa</td><td>0,061</td><td>0,005</td></tr><tr><td>Tipo de contrato</td><td>0,052</td><td>0,006</td></tr><tr><td>Serviço de internet</td><td>0,013</td><td>0,004</td></tr><tr><td>Segurança online</td><td>0,005</td><td>0,002</td></tr><tr><td>Suporte técnico</td><td>0,004</td><td>0,002</td></tr><tr><td>Forma de pagamento</td><td>0,003</td><td>0,001</td></tr><tr><td>Total já pago</td><td>0,003</td><td>0,001</td></tr><tr><td>Fatura digital</td><td>0,003</td><td>0,001</td></tr></tbody></table>
+  <p>Os dois atributos dominantes — <b>tempo de casa</b> e <b>tipo de contrato</b> — são justamente os que a
+  análise exploratória apontou. Internet, segurança online e suporte vêm em seguida, com efeitos menores.
+  Atributos demográficos como gênero e dependentes têm contribuição quase nula neste modelo, o que é um
+  bom sinal para a discussão de equidade.</p>
+
+  <h3>Explicação local: um cliente de alto risco</h3>
+  <p>Para o perfil <b>NC-003</b> do lote de novos clientes, o modelo estima
+  <b>82,6%</b> de churn — faixa crítica. A tabela mostra o efeito de neutralizar
+  cada atributo (substituí-lo pela mediana/moda da base), mantendo os demais valores do cliente. A coluna
+  “impacto” é quanto a probabilidade cai, em pontos percentuais, quando aquele atributo deixa de contribuir:</p>
+  <table class="compacta"><thead><tr><th>Atributo</th><th>Valor do cliente</th><th>Referência da base</th><th>Impacto</th></tr></thead><tbody><tr><td>Tempo de casa</td><td>1 meses</td><td>29 meses</td><td>+35,9 p,p,</td></tr><tr><td>Total já pago</td><td>R$ 79,90</td><td>R$ 1.394,55</td><td>+4,3 p,p,</td></tr><tr><td>Idoso (60+)</td><td>Sim</td><td>Não</td><td>+2,0 p,p,</td></tr><tr><td>Cobrança mensal</td><td>R$ 79,90</td><td>R$ 70,35</td><td>+0,5 p,p,</td></tr><tr><td>Cobrança média</td><td>R$ 79,90</td><td>R$ 70,34</td><td>+0,4 p,p,</td></tr><tr><td>Gênero</td><td>Male</td><td>Male</td><td>+0,0 p,p,</td></tr><tr><td>Parceiro(a)</td><td>No</td><td>No</td><td>+0,0 p,p,</td></tr></tbody></table>
+  <p class="small muted">Probabilidade de referência com todos os atributos neutralizados:
+  40,2%. A explicação local deste relatório usa neutralização de atributo;
+  a API em produção usa valores SHAP (TreeExplainer), que decompõem a margem do modelo de forma aditiva.</p>
+
+  <h3>Como ler (e como não ler) as explicações</h3>
+  <ul>
+    <li><b>Importância não é causalidade.</b> Dizer que tempo de casa “causa” retenção é um salto indevido;
+    a variável pode capturar seleção, satisfação acumulada ou outros fatores não observados.</li>
+    <li><b>Impacto local é condicionado ao perfil.</b> O mesmo atributo pode empurrar o risco para cima em
+    um cliente e para baixo em outro. As explicações são locais, não regras universais.</li>
+    <li><b>Neutralização e SHAP respondem perguntas ligeiramente diferentes.</b> SHAP distribui a margem
+    entre os atributos; a neutralização mede o efeito de voltar ao perfil de referência. Ambas são úteis,
+    desde que rotuladas com honestidade.</li>
+    <li><b>Explicação não substitui julgamento.</b> O contato de retenção deve considerar contexto, histórico
+    e o custo da oferta; o modelo apenas ordena e justifica o risco.</li>
+  </ul>
+
+  <div class="callout "><span class="tit">Transparência da versão publicada</span>A versão estática no GitHub Pages executa o mesmo Gradient Boosting no navegador e mostra a explicação por neutralização. A versão com API usa SHAP. Em ambas, a probabilidade é a mesma; o que muda é o método de atribuição das contribuições, e a interface informa qual está em uso.</div>
+</section>
+
+<section>
+  <h2><span class="num">Seção 10</span>Do modelo à operação</h2>
+  <p>O projeto não termina no notebook: o modelo treinado é persistido, servido por uma API e apresentado em
+  um painel web. Há duas formas de acesso — uma versão local com FastAPI e uma versão estática publicada no
+  GitHub Pages, que funciona sem servidor e sem instalar nada.</p>
+
+  <div class="fluxo">
+    <div class="etapa"><b>Dados</b><span>base + novos perfis</span></div>
+    <div class="seta">→</div>
+    <div class="etapa"><b>Treino</b><span>train.py</span></div>
+    <div class="seta">→</div>
+    <div class="etapa"><b>Artefatos</b><span>modelo + métricas</span></div>
+    <div class="seta">→</div>
+    <div class="etapa"><b>API</b><span>FastAPI / estática</span></div>
+    <div class="seta">→</div>
+    <div class="etapa"><b>Painel</b><span>6 seções interativas</span></div>
+  </div>
+
+  <h3>Arquitetura local</h3>
+  <p><span class="mono">src/train.py</span> treina os cinco modelos, seleciona o melhor e grava
+  <span class="mono">artifacts/modelo_previa.joblib</span>, <span class="mono">resultados.json</span> e
+  <span class="mono">previsoes_teste.csv</span>. A API em <span class="mono">src/api.py</span> carrega o
+  artefato e serve o painel em <span class="mono">web/</span>. As probabilidades vêm do pipeline treinado,
+  não de regras fixas.</p>
+
+  <table class="compacta"><thead><tr><th>Método</th><th>Rota</th><th>Descrição</th></tr></thead><tbody><tr><td>GET</td><td>/api/saude</td><td>Status do serviço e do modelo</td></tr><tr><td>GET</td><td>/api/modelo-info</td><td>Metadados, hiperparâmetros e versões</td></tr><tr><td>GET</td><td>/api/resultados</td><td>Métricas completas consumidas pelo painel</td></tr><tr><td>GET</td><td>/api/novos-clientes</td><td>Previsões em lote para os 12 perfis</td></tr><tr><td>GET</td><td>/api/amostra-teste</td><td>Amostra do conjunto de teste para auditoria</td></tr><tr><td>POST</td><td>/api/prever</td><td>Probabilidade de um cliente + explicação SHAP</td></tr><tr><td>POST</td><td>/api/prever-lote</td><td>Probabilidade para uma lista de até 500 clientes</td></tr></tbody></table>
+
+  <h3>Painel web</h3>
+  <p>O painel tem seis seções: <b>Visão geral</b>, <b>Base de dados</b>, <b>Análise exploratória</b>,
+  <b>Modelo de Machine Learning</b> (algoritmos, comparação, métricas, matriz de confusão, curva de limiar,
+  importância e ficha técnica), <b>Simulador de risco</b> (formulário, medidor e explicação) e
+  <b>Clientes em risco</b> (ranking da base com filtros e busca). Os gráficos são desenhados em SVG a partir
+  dos dados reais.</p>
+
+  <h3>Versão publicada, sem servidor</h3>
+  <p>Para que o link funcione em qualquer computador, sem Python e sem API, o site publica uma versão
+  estática do painel. Um script de exportação lê os artefatos e embute:</p>
+  <ul>
+    <li>as métricas e a amostra de teste já calculadas;</li>
+    <li>as previsões dos 12 novos clientes;</li>
+    <li>a estrutura do Gradient Boosting (150 árvores de profundidade 2) e o pré-processamento,
+    permitindo que o simulador calcule probabilidades no próprio navegador.</li>
+  </ul>
+  <p>A inferência no navegador foi validada contra o Python em 120 perfis aleatórios, com diferença máxima
+  de <b>4,9 × 10⁻⁷</b> — ou seja, o site não mostra uma aproximação: mostra o mesmo modelo. O teste também
+  reproduziu as 1.409 probabilidades de <span class="mono">previsoes_teste.csv</span>.</p>
+</section>
+
+<section>
+  <h2><span class="num">Seção 11</span>Limitações, ética e governança</h2>
+  <p>Um modelo útil é um modelo com limites explícitos. Esta seção não é um apêndice jurídico: ela define
+  o que o sistema pode e não pode afirmar, e como usá-lo sem transformar uma probabilidade em sentença.</p>
+
+  <h3>Limitações estatísticas e de dados</h3>
+  <ul>
+    <li><b>Correlação não é causalidade.</b> O modelo identifica associação estatística; não prova que mudar
+    um atributo altera o cancelamento. Uma oferta desenhada a partir de uma correlação pode não ter efeito.</li>
+    <li><b>A validação é aleatória, não temporal.</b> A divisão 80/20 embaralha os clientes. Em produção, o
+    futuro não é uma amostra aleatória do passado; recomenda-se validar em um período posterior para medir
+    deriva.</li>
+    <li><b>Uma única operadora.</b> A base descreve um mercado e um momento específicos. Padrões de fibra,
+    contrato e pagamento podem não se transferir para outra empresa ou país.</li>
+    <li><b>Incerteza amostral.</b> O recall de 72,5% tem IC 95% de 67,7% a
+    76,9%. O número é uma estimativa, não uma garantia contratual.</li>
+    <li><b>Rótulo histórico.</b> “Churn” registra o que aconteceu, não a intenção latente. Clientes que
+    saíram por motivos externos podem parecer iguais aos que saíram por insatisfação.</li>
+  </ul>
+
+  <h3>Equidade e atributos sensíveis</h3>
+  <p>Gênero e faixa etária (SeniorCitizen) entram como variáveis. A importância por permutação mostra efeito
+  global pequeno, mas isso não basta: um atributo pode ter efeito pequeno na média e relevante em subgrupos.
+  Antes de usar o score para orientar ofertas, é necessário:</p>
+  <ul>
+    <li>medir recall, precisão e calibração por gênero, faixa etária e outras dimensões relevantes;</li>
+    <li>verificar se a ação de retenção é oferecida de forma equitativa, não apenas o score;</li>
+    <li>documentar a finalidade, os limites e o responsável por cada uso;</li>
+    <li>garantir revisão humana antes de qualquer consequência adversa ao cliente.</li>
+  </ul>
+
+  <h3>Privacidade e conformidade</h3>
+  <p>O projeto usa uma base pública e não manipula nome, CPF, endereço ou contato. Ainda assim, um score de
+  propensão é dado pessoal quando associado a um cliente identificável. Em uma implantação real, aplicam-se
+  princípios de minimização, finalidade, segurança, transparência e direito de revisão, além das regras
+  setoriais e da LGPD. O simulador não deve ser exposto publicamente com dados reais de clientes. Na versão
+  de demonstração, a API libera CORS para facilitar testes; em produção, isso deve ser restrito, com
+  autenticação, <i>rate limiting</i> e registro de auditoria. Nenhuma decisão automatizada de negativa de
+  serviço é tomada pelo modelo.</p>
+
+  <h3>Riscos e mitigações</h3>
+  <table class="compacta"><thead><tr><th>Risco</th><th>Consequência</th><th>Mitigação</th></tr></thead><tbody><tr><td>Correlação lida como causa</td><td>Oferta errada ou expectativa falsa sobre o efeito de uma variável</td><td>Comunicar associação; testar intervenções com experimentos</td></tr><tr><td>Validação aleatória, não temporal</td><td>Métricas otimistas se o comportamento mudar ao longo do tempo</td><td>Backtest temporal e monitoramento de drift</td></tr><tr><td>Base de uma única operadora</td><td>Padrões não transferem para outro mercado</td><td>Recalibrar e revalidar antes de reutilizar</td></tr><tr><td>Probabilidade com incerteza</td><td>Decisões individuais tratadas como certeza</td><td>Usar faixas e combinar com julgamento humano</td></tr><tr><td>Atributos sensíveis</td><td>Tratamento desigual de gênero ou faixa etária</td><td>Auditoria de equidade e revisão de uso</td></tr><tr><td>Feedback loop</td><td>Contatar só os sinalizados muda os dados futuros</td><td>Registrar intervenções e comparar grupos</td></tr><tr><td>Deriva de população</td><td>Queda silenciosa de desempenho</td><td>Monitorar distribuição, recalibrar e retreinar</td></tr></tbody></table>
+
+  <h3>Princípios de uso responsável</h3>
+  <ol>
+    <li><b>O modelo prioriza, a pessoa decide.</b> O score não deve disparar sozinho uma ação irreversível.</li>
+    <li><b>Explicar é parte do produto.</b> Toda previsão relevante deve vir acompanhada dos fatores que mais
+    pesaram e da incerteza.</li>
+    <li><b>Medir antes e depois.</b> A intervenção de retenção precisa de grupo de comparação para saber se
+    funcionou; sem isso, o modelo pode apenas estar rotulando quem já ia sair.</li>
+    <li><b>Revalidar periodicamente.</b> Distribuição de clientes, preços e concorrência mudam; o modelo
+    também precisa mudar.</li>
+  </ol>
+
+  <div class="callout red"><span class="tit">O que este modelo não é</span>Não é um oráculo de cancelamento, não é um mecanismo de punição, não é uma prova de que um cliente vai sair e não é um substituto para ouvir o cliente. É um ranking probabilístico para alocar atenção de retenção com mais critério.</div>
+</section>
+
+<section>
+  <h2><span class="num">Seção 12</span>Conclusão</h2>
+  <p>O projeto entregou um sistema completo de previsão de churn: da base pública real à interface
+  publicada, passando por análise exploratória, comparação de cinco algoritmos, seleção justificada,
+  calibração do limiar, interpretação e documentação. O resultado central é robusto e verificável:
+  no conjunto de teste, o Gradient Boosting alcança <b>PR-AUC 0,663</b>,
+  <b>ROC-AUC 0,845</b> e, no limiar 0,34, <b>recall de 72,5%</b>
+  com precisão de 57,0%.</p>
+
+  <p>Mais importante do que o número é o processo que o sustenta: divisão antes do ajuste, pré-processamento
+  dentro do pipeline, teste usado uma única vez, limiar escolhido em previsões out-of-fold, incerteza
+  quantificada e comparação sob o mesmo protocolo. Esses detalhes são o que separa um resultado acadêmico
+  confiável de uma demonstração otimista.</p>
+
+  <h3>Contribuições</h3>
+  <ul>
+    <li><b>Comparação reprodutível</b> de cinco famílias de modelos, com grades, tempos e métricas no mesmo
+    conjunto de teste.</li>
+    <li><b>Escolha guiada por métrica adequada</b> ao desbalanceamento, com discussão explícita do custo de
+    falsos positivos e falsos negativos.</li>
+    <li><b>Modelo interpretável</b> em nível global (permutação) e local (SHAP na API, neutralização na
+    versão estática).</li>
+    <li><b>Operacionalização real</b>: API FastAPI, painel de seis seções, versão estática no GitHub Pages e
+    relatório em PDF.</li>
+    <li><b>Transparência</b> sobre dados, limitações, ética e reprodutibilidade.</li>
+  </ul>
+
+  <h3>Próximos passos</h3>
+  <table class="compacta"><thead><tr><th>Frente</th><th>O que fazer</th><th>Por que</th></tr></thead><tbody><tr><td>Validação temporal</td><td>Separar treino e teste por data e acompanhar drift</td><td>Aproximar o modelo do uso real</td></tr><tr><td>Modelo de uplift</td><td>Estimar o efeito incremental de cada oferta</td><td>Evitar gastar com quem já ficaria</td></tr><tr><td>Custo assimétrico</td><td>Otimizar o limiar por custo de retenção vs perda</td><td>Transformar o trade-off em decisão econômica</td></tr><tr><td>Equidade</td><td>Auditar métricas por subgrupo e ajustar políticas</td><td>Reduzir risco de tratamento desigual</td></tr><tr><td>Monitoramento</td><td>Painel de distribuição, calibração e recall ao longo do tempo</td><td>Detectar degradação antes do prejuízo</td></tr><tr><td>Experimentação</td><td>Testes A/B com grupo de controle</td><td>Medir o efeito real da retenção</td></tr></tbody></table>
+
+  <p>O churn é um problema de decisão sob incerteza. O valor deste trabalho não está em prometer certeza,
+  mas em oferecer uma forma disciplinada de priorizar atenção, comunicar risco e aprender com o resultado.
+  Nesse sentido, o modelo está pronto para ser usado como ponto de partida — e as limitações estão
+  documentadas para que ele seja usado com maturidade.</p>
+</section>
+
+<section>
+  <h2><span class="num">Seção 13</span>Reprodutibilidade e referências</h2>
+  <p>Todo o resultado pode ser regenerado a partir da base pública. O treino é determinístico para a semente
+  42 e o tempo total registrado foi de 41,30 s. Os artefatos ficam em
+  <span class="mono">artifacts/</span>; o model card em <span class="mono">reports/modelo_card.md</span>;
+  o painel em <span class="mono">web/</span>.</p>
+
+  <div class="codigo"><span class="c"># 1. dependências</span>
+pip install pandas numpy scikit-learn xgboost shap fastapi uvicorn joblib matplotlib
+
+<span class="c"># 2. treinar, comparar, selecionar e gravar os artefatos</span>
+python src/train.py
+
+<span class="c"># 3. regenerar o model card e a tabela comparativa</span>
+python src/gerar_relatorio.py
+
+<span class="c"># 4. subir a API + painel local</span>
+python src/api.py            <span class="c"># http://127.0.0.1:8000</span>
+
+<span class="c"># 5. gerar a versão estática publicada no GitHub Pages</span>
+python src/exportar_site_estatico.py
+
+<span class="c"># 6. gerar este relatório em PDF</span>
+python src/gerar_relatorio_pdf.py</div>
+
+  <h3>Ambiente de geração</h3>
+  <p class="small">Python 3.12 · scikit-learn 1.9.1 · pandas 3.1.1 ·
+  numpy 2.5.5 · Matplotlib 3.11 · Microsoft Edge headless (A4) · semente 42.
+  Artefato do modelo: <span class="mono">artifacts/modelo_previa.joblib</span>.</p>
+
+  <h3>Referências</h3>
+  <ol class="small">
+    <li>IBM. <i>Telco Customer Churn</i> (base pública). Disponível em:
+    raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/master/data/Telco-Customer-Churn.csv.</li>
+    <li>Pedregosa, F. et al. Scikit-learn: Machine Learning in Python. <i>Journal of Machine Learning
+    Research</i>, v. 12, p. 2825–2830, 2011. scikit-learn.org.</li>
+    <li>Friedman, J. H. Greedy Function Approximation: A Gradient Boosting Machine.
+    <i>Annals of Statistics</i>, v. 29, n. 5, p. 1189–1232, 2001.</li>
+    <li>Breiman, L. Random Forests. <i>Machine Learning</i>, v. 45, p. 5–32, 2001.</li>
+    <li>Chen, T.; Guestrin, C. XGBoost: A Scalable Tree Boosting System. <i>KDD</i>, 2016.
+    xgboost.readthedocs.io.</li>
+    <li>Lundberg, S. M.; Lee, S.-I. A Unified Approach to Interpreting Model Predictions.
+    <i>NeurIPS</i>, 2017. shap.readthedocs.io.</li>
+    <li>Saito, T.; Rehmsmeier, M. The Precision-Recall Plot Is More Informative than the ROC Plot When
+    Evaluating Binary Classifiers on Imbalanced Datasets. <i>PLoS ONE</i>, v. 10, n. 3, 2015.</li>
+    <li>FastAPI. Documentação oficial: fastapi.tiangolo.com.</li>
+    <li>GitHub. <i>GitHub Pages</i>: docs.github.com/pages.</li>
+    <li>Repositório do projeto: github.com/Mariozhin/Atividade-03.</li>
+  </ol>
+
+  <div class="rubrica">
+    <b>Como citar este relatório:</b> FERREIRA, Mario Joaquim. <i>PREVIA AI — Previsão de churn em
+    telecomunicações: relatório técnico</i>. Projeto Atividade 03, 2026. Disponível em
+    https://mariozhin.github.io/Atividade-03/.
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">Anexos</span>A. Dicionário de variáveis</h2>
+  <table class="compacta"><thead><tr><th>Coluna</th><th>Tipo</th><th>Papel</th><th>Descrição</th></tr></thead><tbody><tr><td>customerID</td><td>Texto</td><td>Identificador</td><td>Código único do cliente; removido antes do treino.</td></tr><tr><td>gender</td><td>Categórica</td><td>Atributo</td><td>Female / Male.</td></tr><tr><td>SeniorCitizen</td><td>Binária (0/1)</td><td>Atributo</td><td>1 se o cliente tem 60 anos ou mais.</td></tr><tr><td>Partner</td><td>Categórica</td><td>Atributo</td><td>Possui parceiro(a): Yes / No.</td></tr><tr><td>Dependents</td><td>Categórica</td><td>Atributo</td><td>Possui dependentes: Yes / No.</td></tr><tr><td>tenure</td><td>Numérica</td><td>Atributo</td><td>Meses como cliente (0 a 72).</td></tr><tr><td>PhoneService</td><td>Categórica</td><td>Atributo</td><td>Assinatura de telefone: Yes / No.</td></tr><tr><td>MultipleLines</td><td>Categórica</td><td>Atributo</td><td>Linhas múltiplas: Yes / No / No phone service.</td></tr><tr><td>InternetService</td><td>Categórica</td><td>Atributo</td><td>DSL / Fiber optic / No.</td></tr><tr><td>OnlineSecurity</td><td>Categórica</td><td>Atributo</td><td>Segurança online: Yes / No / No internet service.</td></tr><tr><td>OnlineBackup</td><td>Categórica</td><td>Atributo</td><td>Backup online: Yes / No / No internet service.</td></tr><tr><td>DeviceProtection</td><td>Categórica</td><td>Atributo</td><td>Proteção do aparelho: Yes / No / No internet service.</td></tr><tr><td>TechSupport</td><td>Categórica</td><td>Atributo</td><td>Suporte técnico: Yes / No / No internet service.</td></tr><tr><td>StreamingTV</td><td>Categórica</td><td>Atributo</td><td>Streaming de TV: Yes / No / No internet service.</td></tr><tr><td>StreamingMovies</td><td>Categórica</td><td>Atributo</td><td>Streaming de filmes: Yes / No / No internet service.</td></tr><tr><td>Contract</td><td>Categórica</td><td>Atributo</td><td>Month-to-month / One year / Two year.</td></tr><tr><td>PaperlessBilling</td><td>Categórica</td><td>Atributo</td><td>Fatura digital: Yes / No.</td></tr><tr><td>PaymentMethod</td><td>Categórica</td><td>Atributo</td><td>Cheque eletrônico, cheque enviado, transferência ou cartão.</td></tr><tr><td>MonthlyCharges</td><td>Numérica</td><td>Atributo</td><td>Cobrança mensal em unidades monetárias da base.</td></tr><tr><td>TotalCharges</td><td>Numérica</td><td>Atributo</td><td>Total já cobrado; 11 células em branco (tenure = 0) tratadas como 0.</td></tr><tr><td>Churn</td><td>Categórica</td><td>Alvo</td><td>Yes se o cliente cancelou; No caso contrário.</td></tr><tr><td>ServicosContratados</td><td>Numérica</td><td>Derivado</td><td>Quantidade de serviços de valor agregado (0 a 6).</td></tr><tr><td>CobrancaMedia</td><td>Numérica</td><td>Derivado</td><td>TotalCharges ÷ tenure; para tenure = 0 usa MonthlyCharges.</td></tr></tbody></table>
+  <p class="small muted">A base bruta tem 21 colunas. Após remover o identificador e o alvo,
+  restam 19 atributos originais; com os dois derivados, o modelo usa 21 atributos.
+  O one-hot com agrupamento de categorias raras produz 47 colunas numéricas.</p>
+
+  <h3>B. Ficha técnica do modelo</h3>
+  <table class="compacta"><thead><tr><th>Campo</th><th>Valor</th></tr></thead><tbody><tr><td>Algoritmo</td><td>GradientBoostingClassifier (scikit-learn)</td></tr><tr><td>Hiperparâmetros</td><td>learning_rate=0,05 · max_depth=2 · n_estimators=150 · random_state=42</td></tr><tr><td>Entrada</td><td>19 atributos originais + 2 derivados = 21</td></tr><tr><td>Transformação</td><td>StandardScaler (6 numéricas) + OneHotEncoder (15 categóricas, min_frequency=10)</td></tr><tr><td>Colunas após transformação</td><td>47</td></tr><tr><td>Alvo</td><td>Churn (Yes/No), codificado como 1/0</td></tr><tr><td>Limiar operacional</td><td>0,34 (F1 out-of-fold no treino)</td></tr><tr><td>Treino / teste</td><td>5.634 / 1.409</td></tr><tr><td>PR-AUC (teste)</td><td>0,663</td></tr><tr><td>ROC-AUC (teste)</td><td>0,845 (IC 95%: 0,822–0,866)</td></tr><tr><td>Recall (limiar)</td><td>72,5% (IC 95%: 67,7%–76,9%)</td></tr><tr><td>Precisão (limiar)</td><td>57,0%</td></tr><tr><td>F1 (limiar)</td><td>0,638 (IC 95%: 0,598–0,676)</td></tr><tr><td>Brier</td><td>0,136</td></tr><tr><td>Matriz de confusão</td><td>TN 831 · FP 204 · FN 103 · TP 271</td></tr><tr><td>Artefato</td><td>artifacts/modelo_previa.joblib</td></tr></tbody></table>
+
+  <h3>C. Glossário</h3>
+  <table class="compacta"><thead><tr><th>Termo</th><th>Definição</th></tr></thead><tbody><tr><td>Churn</td><td>Cancelamento do cliente; no projeto, Churn = Yes.</td></tr><tr><td>Classe positiva</td><td>Evento de interesse (cancelamento), minoritário na base.</td></tr><tr><td>Desbalanceamento</td><td>Distribuição desigual entre classes; aqui 26,5% de positivos.</td></tr><tr><td>Pipeline</td><td>Sequência de transformações e modelo ajustada como uma unidade, evitando vazamento.</td></tr><tr><td>Vazamento (leakage)</td><td>Uso indevido de informação do teste no treino ou na escolha do modelo.</td></tr><tr><td>Validação cruzada</td><td>Divisão do treino em folds para estimar desempenho e ajustar hiperparâmetros.</td></tr><tr><td>OOF</td><td>Previsões out-of-fold: cada cliente do treino é previsto por um modelo que não o viu.</td></tr><tr><td>ROC-AUC</td><td>Probabilidade de ordenar um positivo acima de um negativo.</td></tr><tr><td>PR-AUC</td><td>Área sob a curva precisão × recall; adequada a classes desbalanceadas.</td></tr><tr><td>Limiar</td><td>Probabilidade a partir da qual o cliente é sinalizado para retenção.</td></tr><tr><td>Calibração</td><td>Concordância entre probabilidade prevista e frequência observada.</td></tr><tr><td>SHAP</td><td>Método de atribuição aditiva da previsão aos atributos.</td></tr><tr><td>Deriva (drift)</td><td>Mudança na distribuição dos dados ao longo do tempo.</td></tr></tbody></table>
+
+  <div class="contracapa">
+    <div class="marca">
+      <div class="logo">
+        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 29V11h8.2a6.2 6.2 0 0 1 0 12.4H17V29" stroke="#5eead4" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="28" cy="27.5" r="2.6" fill="#fbbf24"/>
+        </svg>
+      </div>
+      <div>
+        <div class="marca-nome">PREVIA<span> AI</span></div>
+        <div class="marca-sub">Customer Retention</div>
+      </div>
+    </div>
+
+    <div class="eyebrow">Projeto publicado</div>
+    <h2>Links de acesso</h2>
+
+    <div class="links">
+      <div><b>Painel interativo</b><span>https://mariozhin.github.io/Atividade-03/</span></div>
+      <div><b>Repositório</b><span>https://github.com/Mariozhin/Atividade-03</span></div>
+      <div><b>Este relatório em PDF</b><span>https://mariozhin.github.io/Atividade-03/relatorio/PREVIA_AI_Relatorio.pdf</span></div>
+    </div>
+
+    <p class="nota">O painel e o PDF ficam disponíveis independentemente do computador ou servidor local.
+    O simulador de risco calcula as probabilidades no próprio navegador, com o mesmo modelo treinado em Python.</p>
+
+    <div class="rodape">
+      <div>PREVIA AI · Relatório técnico de previsão de churn</div>
+      <div>github.com/Mariozhin/Atividade-03</div>
+    </div>
+  </div>
+</section>
+</div>
+</body>
+</html>
